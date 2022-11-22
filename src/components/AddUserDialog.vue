@@ -12,7 +12,7 @@
       </el-form-item>
       <el-form-item label="性别" prop="gender">
         <el-radio-group v-model="form.gender">
-          <el-radio label="男"></el-radio>
+          <el-radio label="男" :value="1"></el-radio>
           <el-radio label="女"></el-radio>
           <el-radio label="未知"></el-radio>
         </el-radio-group>
@@ -165,7 +165,7 @@ export default {
     async submitForm(formName) {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
-          request.post("/employee/add", this.form).then(res => {
+          request.post("/employee/addEmp", this.form).then(res => {
             console.log(res)
             if (res['code'] === 1) {
               this.$message({

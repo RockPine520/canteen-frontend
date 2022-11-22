@@ -81,7 +81,7 @@ import request from "@/plugins/request";
 
 export default {
   name: "EditUserDialog",
-  props: ['editUserDialogVisible','formRow'],
+  props: ['editUserDialogVisible', 'formRow'],
   data() {
     return {
       multipleSelection: [],
@@ -119,7 +119,7 @@ export default {
   },
   methods: {
     handleUploadSuccess(res) {
-      const baseurl = 'http://localhost:8089/common/download?name='
+      // const baseurl = 'http://localhost:8089/common/download?name='
       this.form.faceTemplate = res.data
     },
     handleDialogClose(done) {
@@ -155,25 +155,27 @@ export default {
     async submitForm(formName) {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
-          console.log("edit",this.form)
-          if (this.form.faceTemplate){
-            request.put("/employee/edit", this.form).then(res => {
-              console.log(res)
-              if (res['code'] === 1) {
-                this.$message({
-                  type: "success",
-                  message: "修改成功"
-                })
-                this.$emit("editSuccessVisibleChange", false)
-              } else {
-                this.$message({
-                  type: "error",
-                  message: "修改失败"
-                })
-                this.$emit("editDialogVisibleChange", false)
-              }
-            })
-          }
+          console.log("edit", this.form)
+          // if (this.form.faceTemplate){
+          request.put("/employee/editdb", this.form).then(res => {
+            console.log(res)
+            if (res['code'] === 1) {
+              this.$message({
+                type: "success",
+                message: "修改成功"
+              })
+              this.$emit("editSuccessVisibleChange", false)
+            } else {
+              this.$message({
+                type: "error",
+                message: "修改失败"
+              })
+              this.$emit("editDialogVisibleChange", false)
+            }
+          })
+          // } else {
+
+          // }
 
         } else {
           console.log('修改校验失败')
