@@ -1,5 +1,5 @@
 <template>
-  <router-view/>
+    <router-view/>
 </template>
 
 <script>
@@ -9,7 +9,7 @@ export default {
   components: {
   },
   created() {
-    this.$router.push('/employee')
+    // this.$router.push('/employee')
   }
 }
 </script>

@@ -1,5 +1,8 @@
 <template>
-登录页面
+<div>
+  登录页面
+</div>
+
 </template>
 
 <script>

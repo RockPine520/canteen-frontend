@@ -6,6 +6,10 @@
       :before-close="handleDialogClose"
       @close="closeDialog"
   >
+    <div style="margin-left: 15px">
+      <el-input v-model="search" placeholder="请输入关键字" style="width: 20%" clearable></el-input>
+      <el-button type="primary" style="margin-left: 5px" @click="loadData">查询</el-button>
+    </div>
     <el-table
         v-loading="loading"
         ref="multipleTable"
@@ -20,7 +24,7 @@
       <el-table-column sortable prop="userId" label="员工ID" align="center" width="100"/>
       <el-table-column prop="name" label="姓名" align="center" width="100"/>
       <el-table-column prop="idValid" label="员工有效期" align="center" width="180"/>
-      <el-table-column prop="group" label="员工组" align="center"/>
+      <el-table-column prop="depId" label="员工部门" align="center"/>
       <el-table-column prop="send_device" label="已下发设备列表" align="center"/>
     </el-table>
     <div>
@@ -54,10 +58,11 @@ import request from "@/plugins/request";
 
 export default {
   name: "SendUserDialog",
-  props: ['sendDialogVisible'],
+  props: ['sendDialogVisible','formRow'],
   data() {
     return {
       dialogVisible: this.sendDialogVisible,
+      form : this.formRow,
       userData: [],
       multipleSelection: [],
       currentPage: 1,
@@ -73,34 +78,36 @@ export default {
   watch: {
     sendDialogVisible(newVal) {
       this.dialogVisible = newVal
+    },
+    formRow(newVal){
+      this.form = newVal
+      this.loadData()
     }
   },
   methods: {
     loadData() {
       this.loading = true
-      request.get('/employee', {
+      console.log("根据员工部门查询")
+      console.log("this.form.depId",this.form.depId)
+      request.get('/employee/findByDepId', {
         params: {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
-          search: this.search
+          search: this.search,
+          depId:this.form.depId
         }
       }).then(res => {
         this.loading = false
-        this.userData = res.data.records;
+        this.userData = res.data.records
         this.total = res.data.total
       })
     },
     closeDialog() {
       this.$emit("dialogVisibleChange", false)
-      this.$refs.multipleTable.clearSelection();
+      this.$refs.multipleTable.clearSelection()
     },
-    handleDialogClose(done) {
-      this.$confirm('确认关闭？')
-          .then(_ => {
-            done();
-          })
-          .catch(_ => {
-          });
+    handleDialogClose() {
+      this.dialogVisible = false
     },
     handleSelectionChange(val) {
       // console.log(val) // proxy包裹的数据
@@ -140,7 +147,7 @@ export default {
     },
   },
   created() {
-    this.loadData()
+
   },
 
 }

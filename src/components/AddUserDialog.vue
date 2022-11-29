@@ -12,13 +12,13 @@
       </el-form-item>
       <el-form-item label="性别" prop="gender">
         <el-radio-group v-model="form.gender">
-          <el-radio label="男" :value="1"></el-radio>
-          <el-radio label="女"></el-radio>
-          <el-radio label="未知"></el-radio>
+          <el-radio :label="0">男</el-radio>
+          <el-radio :label="1">女</el-radio>
+          <el-radio :label="2">未知</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="员工组" prop="group">
-        <el-select v-model="form.group" placeholder="请选择" style="width: 90%">
+      <el-form-item label="员工部门" prop="depId">
+        <el-select v-model="form.depId" placeholder="请选择" style="width: 90%">
           <el-option
               v-for="item in groupOptions"
               :key="item.value"
@@ -37,6 +37,8 @@
         <el-date-picker
             v-model="form.idValid"
             type="datetime"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format = "YYYY-MM-DD HH:mm:ss"
             placeholder="置空则有效期永久"
             style="width: 90%">
         </el-date-picker>
@@ -69,7 +71,7 @@
           <el-button type="primary" @click="submitForm('formRef')">
             保存
           </el-button>
-          <el-button @click="resetForm('formRef')">重置</el-button>
+<!--          <el-button @click="resetForm('formRef')">重置</el-button>-->
           <el-button @click="dialogVisible = false">取消</el-button>
         </span>
     </template>
@@ -88,29 +90,8 @@ export default {
       dialogVisible: this.addUserDialogVisible,
       photoVisible: false,
       photoUrl: '',
-      groupOptions: [
-        {
-          value: '1',
-          label: '山明'
-        },
-        {
-          value: '2',
-          label: '益新'
-        },
-        {
-          value: '3',
-          label: '尔美'
-        }
-      ],
-      form: {
-        name: '',
-        group: '',
-        phone: '',
-        idCard: '',
-        gender: '',
-        idValid: '',
-        faceTemplate: '',
-      },
+      groupOptions: [],
+      form: {},
       labelPosition: 'right',
       fileList: [],
       // limit:1,
@@ -121,24 +102,29 @@ export default {
         gender: [
           {required: true, message: "请选择性别", trigger: 'change'},
         ],
-        group: [
+        depId: [
           {required: true, message: '请选择员工组', trigger: 'change'}
         ],
       },
     }
   },
   methods: {
+    loadData() {
+      console.log("调用查询员工组表")
+      request.get("/department/all").then(res => {
+        this.groupOptions = res.data.map(item => {
+          return {value: item.depId, label: item.depName}
+        })
+      })
+    },
     handleUploadSuccess(res) {
       // const baseurl = 'http://localhost:8089/common/download?name='
       this.form.faceTemplate = res.data
     },
-    handleDialogClose(done) {
-      this.$confirm('确认关闭？')
-          .then(_ => {
-            done();
-          })
-          .catch(_ => {
-          });
+    handleDialogClose() {
+      this.form={}
+      this.dialogVisible = false
+      this.$refs.formRef.resetFields()
     },
     closeDialog() {
       this.$emit("addDialogVisibleChange", false)
@@ -165,6 +151,7 @@ export default {
     async submitForm(formName) {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
+          console.log("新增", this.form)
           request.post("/employee/addEmp", this.form).then(res => {
             console.log(res)
             if (res['code'] === 1) {
@@ -198,6 +185,9 @@ export default {
       this.dialogVisible = newVal
     },
   },
+  created() {
+    this.loadData()
+  }
 }
 </script>
 

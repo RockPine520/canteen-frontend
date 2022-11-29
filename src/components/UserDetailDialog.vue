@@ -18,11 +18,13 @@
         </div>
         <div>
           <div class="title">性别</div>
-          <div class="content">{{ form.gender }}</div>
+          <div class="content" v-if="form.gender===0">男</div>
+          <div class="content" v-else-if="form.gender===1">女</div>
+          <div class="content" v-else>未知</div>
         </div>
         <div>
-          <div class="title">员工组</div>
-          <div class="content">{{ form.group }}</div>
+          <div class="title">员工部门</div>
+          <div class="content">{{ form.depId }}</div>
         </div>
         <div>
           <div class="title">电话号码</div>

@@ -1,6 +1,9 @@
 <template>
-签到表
-  <el-input v-model="search" placeholder="请输入关键字" style="width: 20%"></el-input>
+  <div>
+    签到表
+    <el-input v-model="search" placeholder="请输入关键字" style="width: 20%"></el-input>
+  </div>
+
 </template>
 
 <script>
