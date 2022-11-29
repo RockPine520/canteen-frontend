@@ -4,6 +4,7 @@ import Layout from "@/layout/Layout";
 import Login from "@/views/Login";
 import Sign from "@/views/Sign";
 import Device from "@/views/Device";
+import EmpGroup from "@/views/EmpGroup";
 
 const routes = [
     {
@@ -27,6 +28,11 @@ const routes = [
                 name: 'device',
                 component: Device
             },
+            {
+                path: '/empgroup',
+                name: 'empgroup',
+                component: EmpGroup
+            }
         ]
     },
     {

@@ -12,13 +12,13 @@
       </el-form-item>
       <el-form-item label="性别" prop="gender">
         <el-radio-group v-model="form.gender">
-          <el-radio label="男"></el-radio>
-          <el-radio label="女"></el-radio>
-          <el-radio label="未知"></el-radio>
+          <el-radio :label="0">男</el-radio>
+          <el-radio :label="1">女</el-radio>
+          <el-radio :label="2">未知</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="员工组" prop="group">
-        <el-select v-model="form.group" placeholder="请选择" style="width: 90%">
+      <el-form-item label="员工部门" prop="depId">
+        <el-select v-model="form.depId" placeholder="请选择" style="width: 90%">
           <el-option
               v-for="item in groupOptions"
               :key="item.value"
@@ -37,6 +37,8 @@
         <el-date-picker
             v-model="form.idValid"
             type="datetime"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format = "YYYY-MM-DD HH:mm:ss"
             placeholder="置空则有效期永久"
             style="width: 90%">
         </el-date-picker>
@@ -69,7 +71,7 @@
           <el-button type="primary" @click="submitForm('formRef')">
             保存
           </el-button>
-          <el-button @click="resetForm('formRef')">重置</el-button>
+<!--          <el-button @click="resetForm('formRef')">重置</el-button>-->
           <el-button @click="dialogVisible = false">取消</el-button>
         </span>
     </template>
@@ -86,20 +88,7 @@ export default {
     return {
       multipleSelection: [],
       dialogVisible: this.editUserDialogVisible,
-      groupOptions: [
-        {
-          value: '1',
-          label: '山明'
-        },
-        {
-          value: '2',
-          label: '益新'
-        },
-        {
-          value: '3',
-          label: '尔美'
-        }
-      ],
+      groupOptions: [],
       form: this.formRow,
       labelPosition: 'right',
       fileList: [],
@@ -111,24 +100,26 @@ export default {
         gender: [
           {required: true, message: "请选择性别", trigger: 'change'},
         ],
-        group: [
+        depId: [
           {required: true, message: '请选择员工组', trigger: 'change'}
         ],
       },
     }
   },
   methods: {
-    handleUploadSuccess(res) {
-      // const baseurl = 'http://localhost:8089/common/download?name='
-      this.form.faceTemplate = res.data
+    loadData(){
+      request.get("/department/all").then(res=>{
+        this.groupOptions = res.data.map(item=>{
+          return {value:item.depId,label:item.depName}
+        })
+      })
+
     },
-    handleDialogClose(done) {
-      this.$confirm('确认关闭？')
-          .then(_ => {
-            done();
-          })
-          .catch(_ => {
-          });
+
+    handleDialogClose() {
+      this.form={}
+      this.dialogVisible = false
+      this.$refs.formRef.resetFields()
     },
     closeDialog() {
       this.$emit("editDialogVisibleChange", false)
@@ -140,14 +131,21 @@ export default {
     },
     handleChange(file, fileList) {
       if (fileList.length > 0) {
-        this.fileList = [fileList[fileList.length - 1]]
+        this.fileList = [fileList[fileList.length - 1]] // 替换照片
       }
     },
-    beforeRemove(file, fileList) {
+    handleUploadSuccess(res) {
+      this.form.faceTemplate = res.data
+    },
+    beforeRemove(file) {
       return this.$confirm(`确定移除 ${file.name}？`);
     },
     handleRemove(file, fileList) {
       console.log(file, fileList);
+      console.log('this.fileList',this.fileList)
+      if (fileList.length === 0){
+        this.form.faceTemplate = ''
+      }
     },
     handleBeforeUploaded(file) {
       return this.$confirm(`确定上传 ${file.name}？`);
@@ -173,9 +171,6 @@ export default {
               this.$emit("editDialogVisibleChange", false)
             }
           })
-          // } else {
-
-          // }
 
         } else {
           console.log('修改校验失败')
@@ -195,11 +190,22 @@ export default {
     },
     formRow(newVal) {
       this.form = newVal
+      if (this.form.faceTemplate){
+        this.fileList = [{
+          // name:this.form.faceTemplate,
+          name:'当前上传成功的照片',
+          url:'http://localhost:8089/common/download?name='+this.form.faceTemplate
+        }]
+      }
     }
+  },
+  created() {
+    this.loadData()
   },
 }
 </script>
 
 <style scoped>
-
+.upload-photo {
+}
 </style>

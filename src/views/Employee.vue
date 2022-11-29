@@ -40,11 +40,12 @@
       </el-table-column>
       <el-table-column sortable prop="userId" label="员工ID" align="center" width="100"/>
       <el-table-column prop="name" label="姓名" align="center" width="100"/>
+      <el-table-column prop="gender" label="性别" align="center" width="100" :formatter="genderFormat"/>
       <el-table-column prop="idValid" label="员工有效期" align="center" width="240"/>
-      <el-table-column prop="group" label="员工组" align="center" width="100"/>
+      <el-table-column prop="depId" label="员工部门" align="center" width="100"/>
       <el-table-column prop="phone" label="电话号码" align="center" width="150"/>
       <el-table-column prop="idCard" label="身份证号" align="center" width="240"/>
-      <el-table-column fixed="right" label="操作" width="270" align="center">
+      <el-table-column fixed="right" label="操作" align="center" width="300">
         <template #default="scope">
           <el-button link type="primary" size="small" @click="handleDetail(scope.row)">用户详情</el-button>
           <el-button link type="primary" size="small">已下发设备</el-button>
@@ -89,6 +90,7 @@ export default {
   data() {
     return {
       tableData: [],
+      showData: [],
       multipleSelection: [],
       currentPage: 1,
       pageSize: 10,
@@ -114,6 +116,13 @@ export default {
   },
 
   methods: {
+    genderFormat(row){
+      if (row.gender === 0) {
+        return '男'
+      } else if (row.gender === 1) {
+        return '女'
+      }else return '未知'
+    },
     loadData() {
       this.loading = true
       request.get('/employee',{
@@ -127,10 +136,18 @@ export default {
         this.loading = false
         this.tableData = res.data.records
         this.total = res.data.total
+
+        // this.tableData.forEach(item=>{
+        //   if (item.gender === 0) {
+        //     item.gender = '男'
+        //   }else if (item.gender === 1) {
+        //     item.gender = '女'
+        //   }
+        //   else item.gender = '未知'
+        // })
       })
     },
     handleDetail(row) {
-      console.log("这一行",row)
       this.form = JSON.parse(JSON.stringify(row))
       this.detailDialogVisible = true
     },
@@ -187,7 +204,7 @@ export default {
               })
             }
             else {
-              this.$message({
+              this.$message.error({
                 message:res.msg
               })
             }
