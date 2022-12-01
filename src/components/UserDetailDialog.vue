@@ -24,7 +24,7 @@
         </div>
         <div>
           <div class="title">员工部门</div>
-          <div class="content">{{ form.depId }}</div>
+          <div class="content">{{ form.departmentName }}</div>
         </div>
         <div>
           <div class="title">电话号码</div>

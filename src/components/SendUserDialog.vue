@@ -2,7 +2,7 @@
   <el-dialog
       v-model="dialogVisible"
       title="选择用户下发"
-      width="50%"
+      width="55%"
       :before-close="handleDialogClose"
       @close="closeDialog"
   >
@@ -16,6 +16,7 @@
         :data="userData"
         stripe
         @selection-change="handleSelectionChange"
+        max-height="300"
     >
       <el-table-column
           type="selection"
@@ -24,8 +25,17 @@
       <el-table-column sortable prop="userId" label="员工ID" align="center" width="100"/>
       <el-table-column prop="name" label="姓名" align="center" width="100"/>
       <el-table-column prop="idValid" label="员工有效期" align="center" width="180"/>
-      <el-table-column prop="depId" label="员工部门" align="center"/>
-      <el-table-column prop="send_device" label="已下发设备列表" align="center"/>
+      <el-table-column prop="departmentName" label="员工部门" align="center"/>
+      <el-table-column prop="isOnThisDevice" label="是否已下发到该设备" align="center"
+                       :filters="[{text:'已下发',value:true},{text:'未下发',value: false}]"
+                       :filter-method="filterOnDevice"
+                       filter-placement="bottom-end"
+      >
+        <template #default="scope">
+          <el-tag v-if="scope.row.isOnThisDevice===true" type="success">已下发</el-tag>
+          <el-tag v-else-if="scope.row.isOnThisDevice===false" type="warning">未下发</el-tag>
+        </template>
+      </el-table-column>
     </el-table>
     <div>
       <el-pagination
@@ -41,7 +51,6 @@
           @current-change="handleCurrentChange"
       />
     </div>
-
     <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
@@ -58,11 +67,11 @@ import request from "@/plugins/request";
 
 export default {
   name: "SendUserDialog",
-  props: ['sendDialogVisible','formRow'],
+  props: ['sendDialogVisible', 'formRow'],
   data() {
     return {
       dialogVisible: this.sendDialogVisible,
-      form : this.formRow,
+      form: this.formRow,
       userData: [],
       multipleSelection: [],
       currentPage: 1,
@@ -79,28 +88,31 @@ export default {
     sendDialogVisible(newVal) {
       this.dialogVisible = newVal
     },
-    formRow(newVal){
+    formRow(newVal) {
       this.form = newVal
       this.loadData()
     }
   },
   methods: {
+    filterOnDevice(value,row){
+      return row.isOnThisDevice === value
+    },
     loadData() {
       this.loading = true
-      console.log("根据员工部门查询")
-      console.log("this.form.depId",this.form.depId)
       request.get('/employee/findByDepId', {
         params: {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
           search: this.search,
-          depId:this.form.depId
+          depId: this.form.depId,
+          devId: this.form.devId
         }
       }).then(res => {
         this.loading = false
         this.userData = res.data.records
         this.total = res.data.total
       })
+
     },
     closeDialog() {
       this.$emit("dialogVisibleChange", false)
@@ -123,20 +135,31 @@ export default {
       this.currentPage = val
       this.loadData()
     },
-    sendToDevice() {
-      // const multipleSelection = JSON.parse(JSON.stringify(this.multipleSelection))
-      // console.log("ms", this.multipleSelection)
-      // console.log("id",multipleSelection[0]["userId"])
+    async sendToDevice() {
       // 不能用forEach，不支持异步
+      // this.form.depId
+      this.loading = true
       for (let i = 0; i < this.multipleSelection.length; i++) {
-        let value = this.multipleSelection[i]["userId"]
-        request.get('/employee/getEmployeeById/' + value).then(res => {
+        // let value = this.multipleSelection[i]["userId"]
+        let jsonValue = {
+          userId: this.multipleSelection[i]["userId"],
+          devId: this.form.devId
+        }
+        await request.post('/employee/getEmployeeById', jsonValue).then(res => {
           console.log(res)
-          this.$message({
-            message: '下发成功',
-            type: 'success'
-          })
-
+          if (res.code === 1) {
+            this.$message({
+              // message: '下发人员【'+this.multipleSelection[i]["userId"]+'】成功',
+              message: res.data,
+              type: 'success'
+            })
+            this.loadData()
+          } else {
+            this.$message({
+              message: res.msg,
+              type: 'error'
+            })
+          }
         }).catch(err => {
           this.$message({
             message: err,
@@ -144,6 +167,7 @@ export default {
           })
         })
       }
+      this.loading = false
     },
   },
   created() {

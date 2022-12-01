@@ -20,7 +20,7 @@
       </el-menu-item>
       <el-menu-item index="/sign">
         <el-icon><Checked /></el-icon>
-        <span>签到列表</span>
+        <span>签到管理</span>
       </el-menu-item>
 
     </el-menu>
