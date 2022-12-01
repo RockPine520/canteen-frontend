@@ -6,7 +6,7 @@
       :before-close="handleDialogClose"
       @close="closeDialog"
   >
-    <el-form :model="form" :rules="rules" ref="formRef" label-width="120px" :label-position='labelPosition'>
+    <el-form :model="form" :rules="rules" ref="formRef" label-width="120px" :label-position='labelPosition' v-loading="loading">
       <el-form-item label="姓名" prop="name">
         <el-input v-model="form.name" style="width: 90%"/>
       </el-form-item>
@@ -86,6 +86,7 @@ export default {
   props: ['editUserDialogVisible', 'formRow'],
   data() {
     return {
+      loading:false,
       multipleSelection: [],
       dialogVisible: this.editUserDialogVisible,
       groupOptions: [],
@@ -154,22 +155,31 @@ export default {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
           console.log("edit", this.form)
+          this.loading = true
           // if (this.form.faceTemplate){
-          request.put("/employee/editdb", this.form).then(res => {
+          request.put("/employee/editEmp", this.form).then(res => {
             console.log(res)
             if (res['code'] === 1) {
               this.$message({
                 type: "success",
-                message: "修改成功"
+                message: res.data
               })
+              this.loading = false
               this.$emit("editSuccessVisibleChange", false)
             } else {
               this.$message({
                 type: "error",
                 message: "修改失败"
               })
+              this.loading = false
               this.$emit("editDialogVisibleChange", false)
             }
+          }).catch(err => {
+            this.$message({
+              message: "响应超时，请确认该员工的下发设备是否已连接",
+              type: 'error'
+            })
+            this.loading = false
           })
 
         } else {

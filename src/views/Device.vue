@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="button-group">
-      <el-button type="primary" @click="addDialogVisible=true">
+      <el-button type="primary" @click="openAddDialog">
         <el-icon style="margin-right:3px">
           <CirclePlusFilled/>
         </el-icon>
@@ -26,7 +26,9 @@
     >
       <el-table-column
           type="selection"
-          width="55">
+          width="55"
+          fixed="left"
+      >
       </el-table-column>
       <el-table-column sortable prop="devName" label="设备编号" align="center"/>
       <el-table-column prop="is_online" label="是否在线" align="center"/>
@@ -37,7 +39,7 @@
           <el-button link type="primary" size="small"
                      @click="handleSend(scope.row)">下发用户
           </el-button>
-          <el-button link type="primary" size="small" @click="handleClick">已下发用户列表</el-button>
+          <el-button link type="primary" size="small" @click="openSendUser(scope.row)">已下发用户列表</el-button>
           <el-button link type="primary" size="small">设备设置</el-button>
           <el-button link type="primary" size="small" @click="deviceEdit(scope.row)">编辑</el-button>
         </template>
@@ -113,24 +115,90 @@
     <!--下发功能-->
     <send-user-dialog :sendDialogVisible="sendDialogVisible" :formRow="form"
                       @dialogVisibleChange="dialogVisibleChange"></send-user-dialog>
-    <el-pagination
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :page-sizes="[10, 50, 100]"
-        :small="small"
-        :disabled="disabled"
-        :background="background"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-    />
+    <!--    已下发员工列表-->
+    <el-dialog
+        v-model="userDialogVisible"
+        :title="'【'+rowDevName+'】已下发员工列表'"
+        width="50%"
+        :before-close="userClose"
+    >
+      <div style="margin-left: 15px">
+        <el-input v-model="userSearch" placeholder="请输入关键字" style="width: 30%" clearable></el-input>
+        <el-button type="primary" style="margin-left: 5px" @click="loadUserData">查询</el-button>
+        <el-button type="danger" :disabled="userDeleteButtonShow" @click="deleteSendUser"
+                   style="float: right; margin-right: 15px">
+          <el-icon style="margin-right:3px">
+            <DeleteFilled/>
+          </el-icon>
+          从下发设备中删除
+        </el-button>
+      </div>
+
+      <el-table :data="userData"
+                v-loading="userLoading"
+                stripe
+                style="width: 100%"
+                @selection-change="userSelectionChange"
+                max-height="300"
+      >
+        <el-table-column
+            type="selection"
+            width="30">
+        </el-table-column>
+        <el-table-column sortable prop="userId" label="员工ID" align="center"/>
+        <el-table-column prop="name" label="姓名" align="center"/>
+        <el-table-column prop="departmentName" label="员工部门" align="center"/>
+        <el-table-column prop="isDistributed" label="下发状态" align="center" :formatter="statusFormat">
+          <template #default="scope">
+            <el-tag v-if="scope.row.isDistributed===0" type="warning">未下发</el-tag>
+            <el-tag v-else-if="scope.row.isDistributed===1" type="success">已下发</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="100" align="center">
+          <template #default="scope">
+            <el-button type="primary" size="small" @click="handleUserDetail(scope.row)">用户详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div>
+        <el-pagination
+            :current-page="userCurrentPage"
+            :page-size="userPageSize"
+            :page-sizes="[10, 50, 100]"
+            :small="small"
+            :disabled="disabled"
+            :background="background"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="userTotal"
+            @size-change="userSizeChange"
+            @current-change="userCurrentChange"
+        />
+      </div>
+    </el-dialog>
+    <!--    用户详情-->
+    <user-detail-dialog :detailDialogVisible="detailDialogVisible" :formRow="userForm"
+                        @detailDialogVisibleChange="detailDialogVisibleChange"></user-detail-dialog>
+    <div>
+      <el-pagination
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :page-sizes="[10, 50, 100]"
+          :small="small"
+          :disabled="disabled"
+          :background="background"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import {CirclePlusFilled, DeleteFilled, Promotion} from '@element-plus/icons-vue'
 import SendUserDialog from "@/components/SendUserDialog";
+import UserDetailDialog from "@/components/UserDetailDialog";
 import request from "@/plugins/request";
 
 export default {
@@ -139,12 +207,20 @@ export default {
     return {
       tableData: [],
       multipleSelection: [],
+      userMultipleSelection: [],
       sendDialogVisible: false,
       userData: [],
       loading: true,
+      userLoading: false,
       addDialogVisible: false,
       editDialogVisible: false,
-      form: {},
+      userDialogVisible: false,
+      detailDialogVisible: false,
+      form: {
+        devName: '',
+        devId: ''
+      },
+      userForm: {},
       labelPosition: 'right',
       rules: {
         devName: [
@@ -155,6 +231,7 @@ export default {
         ]
       },
       deleteButtonShow: true,
+      userDeleteButtonShow: true,
       currentPage: 1,
       pageSize: 10,
       total: 0,
@@ -163,13 +240,121 @@ export default {
       disabled: false,
       search: '',
       depOptions: [],
+      rowDevName: '',
+      rowDevId: -1,
+      userCurrentPage:1,
+      userPageSize:10,
+      userTotal:0,
+      userSearch:''
     }
   },
   components: {
-    CirclePlusFilled, Promotion, DeleteFilled, SendUserDialog
+    CirclePlusFilled, Promotion, DeleteFilled, SendUserDialog, UserDetailDialog
   },
 
   methods: {
+    detailDialogVisibleChange(val) {
+      this.detailDialogVisible = val
+    },
+    handleUserDetail(row) {
+      console.log("调用用户详情接口")
+      this.userForm = JSON.parse(JSON.stringify(row))
+      this.detailDialogVisible = true
+    },
+    userSelectionChange(val) {
+      this.userMultipleSelection = JSON.parse(JSON.stringify(val))
+      this.userDeleteButtonShow = this.userMultipleSelection.length <= 0;
+    },
+    deleteSendUser() {
+      let ids = []
+      for (let i = 0; i < this.userMultipleSelection.length; i++) {
+        let temp = []
+        temp.push(this.userMultipleSelection[i].userId)
+        temp.push(this.rowDevId)
+        ids.push(temp)
+      }
+      console.log("ids", ids)
+      this.$confirm('此操作会将所选人员从设备中删除，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.userLoading = true
+        request.post('/employee/delsEmp', ids).then(res => {
+          console.log("1",res)
+          if (res.code===1) {
+            this.$message({
+              message: "删除成功",
+              type: 'success'
+            })
+            request.get('/device/getEmpByDevId/' + this.rowDevId).then(res => {
+              this.userData = res.data
+              this.userLoading = false
+              this.loadData()
+            }).catch(err=>{
+              this.$message({
+                message: err,
+                type: 'error'
+              })
+              this.userLoading = false
+            })
+          }else {
+            this.$message({
+              message: res.msg,
+              type: 'error'
+            })
+            this.userLoading = false
+          }
+        }).catch(err=>{
+          this.$message({
+            message: err,
+            type: 'error'
+          })
+          this.userLoading = false
+        })
+      }).catch(err => {
+        this.$message({
+          message: err,
+          type: 'error'
+        })
+        this.userLoading = false
+      })
+    },
+    statusFormat(row) {
+      if (row.isDistributed === 0) {
+        return '未下发'
+      } else if (row.isDistributed === 1) {
+        return '已下发'
+      } else return '未知'
+    },
+    openSendUser(row) {
+      this.userDialogVisible = true
+      this.rowDevName = row.devName
+      this.rowDevId = row.devId
+      this.loadUserData()
+    },
+    loadUserData(){
+      this.userLoading = true
+      //分页查询
+      request.get('/device/getEmpPageByDevId', {
+        params:{
+          pageNum:this.userCurrentPage,
+          pageSize:this.userPageSize,
+          search:this.userSearch,
+          devId:this.rowDevId
+        }
+      }).then(res => {
+        console.log("res1",res)
+        if (res.data){
+          this.userData = res.data.records
+          this.userTotal = res.data.total
+        } else {
+          this.userData=[]
+          this.userTotal = 0
+        }
+        this.userLoading = false
+      })
+    },
     loadData() {
       this.loading = true
       console.log("调用查询设备接口")
@@ -180,6 +365,7 @@ export default {
           search: this.search
         }
       }).then(res => {
+        console.log("dvres",res)
         this.tableData = res.data.records
         this.total = res.data.total
         this.loading = false
@@ -189,33 +375,20 @@ export default {
           return {value: item.depId, label: item.depName}
         })
       })
-      // this.tableData = [
-      //   {
-      //     deviceName: "ET66929",
-      //     is_online: "在线",
-      //     device_nickname: "山明",
-      //     device_group: "山明",
-      //   },
-      //   {
-      //     deviceName: "BT1001",
-      //     is_online: "在线",
-      //     device_nickname: "益新",
-      //     device_group: "益新",
-      //   },
-      // ]
 
     },
     handleClick() {
       console.log("点我")
     },
-    handleSend(row){
-      console.log("row",row)
-      this.sendDialogVisible=true;
+    handleSend(row) {
+      console.log("row", row)
+      this.sendDialogVisible = true;
       this.form = JSON.parse(JSON.stringify(row))
     },
 
     dialogVisibleChange(val) {
       this.sendDialogVisible = val
+      this.form = {}
     },
 
     handleSelectionChange(val) {
@@ -223,6 +396,12 @@ export default {
       this.multipleSelection = JSON.parse(JSON.stringify(val))
       console.log("ms", this.multipleSelection)
       this.deleteButtonShow = this.multipleSelection.length <= 0;
+    },
+    openAddDialog() {
+      this.addDialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.addFormRef.resetFields()
+      })
     },
     addClose() {
       this.form = {}
@@ -233,6 +412,9 @@ export default {
       this.form = {}
       this.editDialogVisible = false
       this.$refs.editFormRef.resetFields()
+    },
+    userClose() {
+      this.userDialogVisible = false
     },
     addDialogClose(formName) {
       this.form = {}
@@ -330,6 +512,14 @@ export default {
       console.log(`current page: ${val}`)
       this.currentPage = val
       this.loadData()
+    },
+    userSizeChange(val){
+      this.userPageSize = val
+      this.loadUserData()
+    },
+    userCurrentChange(val){
+      this.userCurrentPage = val
+      this.loadUserData()
     },
     deviceEdit(row) {
       this.form = JSON.parse(JSON.stringify(row))
