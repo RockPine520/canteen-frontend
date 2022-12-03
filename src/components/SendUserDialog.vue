@@ -17,6 +17,7 @@
         stripe
         @selection-change="handleSelectionChange"
         max-height="300"
+        @filter-change="filterChange"
     >
       <el-table-column
           type="selection"
@@ -28,12 +29,22 @@
       <el-table-column prop="departmentName" label="员工部门" align="center"/>
       <el-table-column prop="isOnThisDevice" label="是否已下发到该设备" align="center"
                        :filters="[{text:'已下发',value:true},{text:'未下发',value: false}]"
-                       :filter-method="filterOnDevice"
                        filter-placement="bottom-end"
+                       :filter-method="filterOnDevice"
       >
         <template #default="scope">
           <el-tag v-if="scope.row.isOnThisDevice===true" type="success">已下发</el-tag>
           <el-tag v-else-if="scope.row.isOnThisDevice===false" type="warning">未下发</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="faceTemplate" label="是否上传照片" align="center"
+                       :filters="[{text:'已上传',value:true},{text:'未上传',value: false}]"
+                       filter-placement="bottom-end"
+                       column-key="filterTag"
+      >
+        <template #default="scope">
+          <el-tag v-if="scope.row.faceTemplate!==null" type="success">已上传</el-tag>
+          <el-tag v-else-if="scope.row.faceTemplate===null" type="danger">未上传</el-tag>
         </template>
       </el-table-column>
     </el-table>
@@ -81,7 +92,8 @@ export default {
       small: false,
       disabled: false,
       background: false,
-      loading: false
+      loading: false,
+      aFilter:undefined
     }
   },
   watch: {
@@ -94,23 +106,32 @@ export default {
     }
   },
   methods: {
+    filterChange(filters){
+      this.aFilter = filters.filterTag
+      this.loadData()
+    },
     filterOnDevice(value,row){
       return row.isOnThisDevice === value
     },
     loadData() {
       this.loading = true
-      request.get('/employee/findByDepId', {
+      let aStatus=''
+      if (this.aFilter!==undefined) aStatus = this.aFilter.join(",")
+      console.log("aStatus",aStatus)
+      request.get('/employee/findByDepIdS', {
         params: {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
           search: this.search,
           depId: this.form.depId,
-          devId: this.form.devId
+          devId: this.form.devId,
+          status:aStatus
         }
       }).then(res => {
         this.loading = false
         this.userData = res.data.records
         this.total = res.data.total
+        console.log("userData",this.userData)
       })
 
     },
@@ -145,6 +166,7 @@ export default {
           userId: this.multipleSelection[i]["userId"],
           devId: this.form.devId
         }
+        console.log("下发",jsonValue)
         await request.post('/employee/getEmployeeById', jsonValue).then(res => {
           console.log(res)
           if (res.code === 1) {
@@ -153,7 +175,6 @@ export default {
               message: res.data,
               type: 'success'
             })
-            this.loadData()
           } else {
             this.$message({
               message: res.msg,
@@ -162,11 +183,13 @@ export default {
           }
         }).catch(err => {
           this.$message({
-            message: err,
+            // message: err,
+            message: '响应超时，请确认该员工的下发设备是否已连接',
             type: 'error'
           })
         })
       }
+      this.loadData()
       this.loading = false
     },
   },

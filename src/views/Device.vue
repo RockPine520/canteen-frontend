@@ -91,7 +91,7 @@
           <el-input v-model="form.devName" style="width: 90%"/>
         </el-form-item>
         <el-form-item label="部门名称" prop="depId">
-          <el-select v-model="form.depId" placeholder="请选择" style="width: 90%">
+          <el-select v-model="form.depId" placeholder="请选择" style="width: 90%" :disabled="isAble">
             <el-option
                 v-for="item in depOptions"
                 :key="item.value"
@@ -245,7 +245,8 @@ export default {
       userCurrentPage:1,
       userPageSize:10,
       userTotal:0,
-      userSearch:''
+      userSearch:'',
+      isAble:false
     }
   },
   components: {
@@ -278,47 +279,33 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => {
+      }).then(async () => {
         this.userLoading = true
-        request.post('/employee/delsEmp', ids).then(res => {
+        await request.post('/employee/delsEmp', ids).then(res => {
           console.log("1",res)
           if (res.code===1) {
             this.$message({
               message: "删除成功",
               type: 'success'
             })
-            request.get('/device/getEmpByDevId/' + this.rowDevId).then(res => {
-              this.userData = res.data
-              this.userLoading = false
-              this.loadData()
-            }).catch(err=>{
-              this.$message({
-                message: err,
-                type: 'error'
-              })
-              this.userLoading = false
-            })
           }else {
             this.$message({
               message: res.msg,
               type: 'error'
             })
-            this.userLoading = false
           }
+          this.userLoading = false
+          this.loadUserData()
         }).catch(err=>{
           this.$message({
             message: err,
             type: 'error'
           })
+          this.loadUserData() //这里有异步的问题，后端先解决
           this.userLoading = false
         })
-      }).catch(err => {
-        this.$message({
-          message: err,
-          type: 'error'
-        })
-        this.userLoading = false
       })
+
     },
     statusFormat(row) {
       if (row.isDistributed === 0) {
@@ -524,6 +511,9 @@ export default {
     deviceEdit(row) {
       this.form = JSON.parse(JSON.stringify(row))
       this.editDialogVisible = true
+      request.get('/device/getEmpByDevId/'+row.devId).then(res=>{
+        this.isAble = res.data !== null;
+      })
     }
   },
   created() {
