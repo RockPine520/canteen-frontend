@@ -33,6 +33,7 @@
         style="width: 100%"
         max-height="500"
         @selection-change="handleSelectionChange"
+        @filter-change="filterChange"
     >
       <el-table-column
           type="selection"
@@ -47,7 +48,7 @@
       <el-table-column prop="departmentName" label="员工部门" align="center" width="100"/>
       <el-table-column prop="isDistributed" label="是否下发" align="center" width="100"
                        :filters="[{text:'已下发',value:1},{text:'未下发',value:0}]"
-                       :filter-method="filterDistributed"
+                       column-key="filterTag"
                        filter-placement="bottom-end"
       >
         <template #default="scope">
@@ -159,7 +160,8 @@ export default {
       deviceLoading:false,
       deviceData:[],
       rowUserName:'',
-      rowUserId:-1
+      rowUserId:-1,
+      aFilter:undefined
     }
   },
   components: {
@@ -171,6 +173,11 @@ export default {
   },
 
   methods: {
+    filterChange(filters){
+      console.log("filter",filters.filterTag)
+      this.aFilter = filters.filterTag
+      this.loadData()
+    },
     filterDistributed(value,row){
       return row.isDistributed === value
     },
@@ -235,11 +242,14 @@ export default {
     },
     loadData() {
       this.loading = true
-      request.get('/employee',{
+      let aStatus = ""
+      if (this.aFilter!==undefined) aStatus = this.aFilter.join(",")
+      request.get('/employee/findPageByDistributed',{
         params:{
           pageNum:this.currentPage,
           pageSize:this.pageSize,
-          search:this.search
+          search:this.search,
+          status:aStatus
         }
       }).then(res => {
         console.log(res)
@@ -247,6 +257,7 @@ export default {
         this.tableData = res.data.records
         this.total = res.data.total
       })
+      this.loading = false
     },
     handleDetail(row) {
       this.form = JSON.parse(JSON.stringify(row))
