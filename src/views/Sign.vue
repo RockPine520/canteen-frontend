@@ -33,8 +33,8 @@
         <template #default="scope">
           <h3 style="text-align: center">规则详情</h3>
           <el-table :data="scope.row.weekday">
-            <el-table-column label="上班时间" prop="day" align="center"/>
-            <el-table-column label="考勤时间" prop="validCycle" align="center">
+            <el-table-column label="上班日" prop="day" align="center"/>
+            <el-table-column label="打卡时间" prop="validCycle" align="center">
               <template #default="scope1">
                 <div v-for="(item,index) in scope1.row.validCycle" :key="index">
                   <div v-if="index===0">
@@ -75,15 +75,24 @@
           @current-change="handleCurrentChange"
       />
     </div>
+<!--    新增规则-->
     <el-dialog
         v-model="addDialogVisible"
-        title="新增部门信息"
+        title="新增规则"
         width="30%"
         :before-close="addClose"
     >
       <el-form :model="form" :rules="rules" ref="addFormRef" label-width="70px" :label-position='labelPosition'>
-        <el-form-item label="部门名" prop="depName">
-          <el-input v-model="form.depName" style="width: 90%"/>
+        <el-form-item label="规则名称" prop="ruleName">
+          <el-input v-model="form.ruleName" style="width: 90%"/>
+        </el-form-item>
+        <el-form-item label="考勤时间" prop="weekDay">
+          <el-button type="primary" @click="timeDialogOpen">
+            <el-icon style="margin-right:3px">
+              <CirclePlusFilled/>
+            </el-icon>
+            新增
+          </el-button>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -95,9 +104,58 @@
       </span>
       </template>
     </el-dialog>
+<!--设置打卡时间-->
+    <el-dialog
+        v-model="setSignTimeVisible"
+        title="设置打卡时间"
+        width="60%"
+        :before-close="timeClose"
+    >
+<!--      注：weekday这个字段实现了双向绑定-->
+      <el-form :model="form.weekday[weekIndex]" ref="timeFormRef" label-width="70px" label-position="top">
+        <el-form-item label="工作日" prop="day" :rules="timeRules.day">
+          <el-checkbox-group v-model="form.weekday[weekIndex].day">
+            <el-checkbox label="星期一" name="day"></el-checkbox>
+            <el-checkbox label="星期二" name="day"></el-checkbox>
+            <el-checkbox label="星期三" name="day"></el-checkbox>
+            <el-checkbox label="星期四" name="day"></el-checkbox>
+            <el-checkbox label="星期五" name="day"></el-checkbox>
+            <el-checkbox label="星期六" name="day"></el-checkbox>
+            <el-checkbox label="星期日" name="day"></el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+        <el-form-item label="打卡时间">
+<!--          <el-time-select v-model="endTime" placeholder="结束时间" start="06:00" step="00:15" end="24:00"></el-time-select>-->
+          <el-form-item v-for="(validTime,index) in form.weekday[weekIndex].validCycle" :key="validTime.key">
+            <div :class="index===0?'normal':'mgt10px'">
+              <el-tag>
+                时间段{{index+1}}
+              </el-tag>
+              <el-form-item :prop="`validCycle.${index}.startTime`" :rules="timeRules.startTime" style="margin-left: 10px">
+                <el-time-select :disabled="index!==nIndex" v-model="validTime.startTime" placeholder="起始时间" :start="sTime" :step="timeStep" :end="eTime" :max-time="validTime.endTime"></el-time-select>
+              </el-form-item>
+              <el-form-item :prop="`validCycle.${index}.endTime`" :rules="timeRules.endTime" style="margin-left: 10px">
+                <el-time-select :disabled="index!==nIndex" v-model="validTime.endTime" placeholder="结束时间" :start="sTime" :step="timeStep" :end="eTime" :min-time="validTime.startTime"></el-time-select>
+              </el-form-item>
+              <el-button :disabled="index!==nIndex || validTime.startTime.length===0 || validTime.endTime.length===0" type="primary" @click.prevent="addValidTime(validTime.endTime,index)" style="margin-left: 12px">新增</el-button>
+              <el-button :disabled="index!==nIndex || index===0" type="danger" @click.prevent="removeValidTime(validTime)">删除</el-button>
+            </div>
+          </el-form-item>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="timeClose">取消</el-button>
+        <el-button type="primary" @click="timeDialogSave('timeFormRef')">
+          保存
+        </el-button>
+      </span>
+      </template>
+    </el-dialog>
+
     <el-dialog
         v-model="editDialogVisible"
-        title="编辑部门信息"
+        title="编辑规则"
         width="30%"
         :before-close="editClose"
     >
@@ -134,12 +192,57 @@ export default {
       tableData: [],
       addDialogVisible: false,
       editDialogVisible: false,
-      form: {},
+      setSignTimeVisible:false,
+      form: {
+        ruleId:"",
+        ruleName:"",
+        version:1,
+        weekday:[{
+          day:[],
+          validCycle:[{
+            startTime:'',
+            endTime:'',
+            key:''
+          }]
+        }],
+        passable:[{
+          start:'',
+          end:'',
+          validCycle:[{
+            startTime:'',
+            endTime:''
+          }]
+        }],
+        impassable:[{
+          start:'',
+          end:'',
+          validCycle:[{
+            startTime:'',
+            endTime:''
+          }]
+        }],
+      },
+      addTimeAble:true,
+      sTime:'03:00',
+      eTime:'22:00',
+      timeStep:'00:15',
+      nIndex:0,
       labelPosition: 'right',
       rules: {
         depName: [
           {required: true, message: "请输入部门名称", trigger: 'blur'},
         ],
+      },
+      timeRules:{
+        startTime: [
+          {required: true, message: "请选择开始打卡时间", trigger: 'change'}
+        ],
+        endTime: [
+          {required: true, message: "请选择结束打卡时间", trigger: 'change'}
+        ],
+        day: [
+          {required: true, message: "请选择工作日", trigger: 'change'}
+        ]
       },
       addLabel: 'test',
       rowData: '',
@@ -153,11 +256,32 @@ export default {
       background: false,
       disabled: false,
       search:'',
-      aWeekdays:[]
+      aWeekdays:[],
+      weekIndex:0
     }
   },
 
   methods: {
+    addValidTime(cutTime,index) {
+      this.form.weekday[this.weekIndex].validCycle.push({
+        startTime: '',
+        endTime:'',
+        key: Date.now()
+      });
+      if (cutTime.length!==0) {
+        this.sTime = cutTime
+        this.nIndex = index+1
+      }
+      console.log("form.weekday[this.weekIndex]",this.form.weekday[this.weekIndex])
+    },
+    removeValidTime(item) {
+      let index = this.form.weekday[this.weekIndex].validCycle.indexOf(item)
+      if (index !== 0) {
+        this.form.weekday[this.weekIndex].validCycle.splice(index, 1)
+        this.nIndex = index-1
+      }
+      console.log("rform.weekday[this.weekIndex]",this.form.weekday[this.weekIndex])
+    },
     loadData() {
       this.loading = true
       console.log("调用查询规则接口")
@@ -226,6 +350,32 @@ export default {
       this.editDialogVisible = false
       this.$refs.editFormRef.resetFields()
     },
+    timeClose() {
+      let index = this.form.weekday.length-1
+      this.form.weekday.splice(index,1)
+      this.nIndex = 0
+      this.weekIndex = index-1
+      this.setSignTimeVisible = false
+      this.$refs.timeFormRef.resetFields()
+    },
+    timeDialogOpen() {
+      this.setSignTimeVisible = true
+      this.form.weekday.push({
+        day:[],
+        validCycle:[{
+          startTime:'',
+          endTime:'',
+          key:''
+        }]
+      })
+      this.weekIndex = this.form.weekday.length-1
+      this.nIndex = 0
+      this.$nextTick(()=>{
+        this.$refs.timeFormRef.resetFields()
+      })
+      console.log("weekIndex",this.weekIndex)
+      console.log("this.form.weekday",this.form.weekday)
+    },
     addDialogClose(formName){
       this.form={}
       this.addDialogVisible = false
@@ -235,6 +385,19 @@ export default {
       this.form={}
       this.editDialogVisible = false
       this.$refs[formName].resetFields()
+    },
+    timeDialogSave(forName) {
+      // let len = this.form.weekday[this.weekIndex].validCycle.length
+      // if (this.form.weekday[this.weekIndex].validCycle[len-1].startTime.length===0 || this.form.weekday[this.weekIndex].validCycle[len-1].endTime.length===0){
+      //   this.form.weekday[this.weekIndex].validCycle.splice(len-1, 1)
+      // }
+      this.$refs[forName].validate((valid)=>{
+        if (valid) {
+          this.setSignTimeVisible = false
+          console.log("form",this.form)
+        }
+      })
+
     },
     async addSave(formName) {
       await this.$refs[formName].validate((valid) => {
@@ -365,4 +528,13 @@ export default {
   padding-right: 16px;
 }
 
+.mgt10px {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+.normal {
+  display: flex;
+  align-items: center
+}
 </style>
