@@ -28,9 +28,9 @@
       <el-table-column prop="idValid" label="员工有效期" align="center" width="180"/>
       <el-table-column prop="departmentName" label="员工部门" align="center"/>
       <el-table-column prop="isOnThisDevice" label="是否已下发到该设备" align="center"
-                       :filters="[{text:'已下发',value:true},{text:'未下发',value: false}]"
+                       :filters="[{text:'已下发',value:1},{text:'未下发',value: 0}]"
                        filter-placement="bottom-end"
-                       :filter-method="filterOnDevice"
+                       column-key="filterDevTag"
       >
         <template #default="scope">
           <el-tag v-if="scope.row.isOnThisDevice===true" type="success">已下发</el-tag>
@@ -38,9 +38,9 @@
         </template>
       </el-table-column>
       <el-table-column prop="faceTemplate" label="是否上传照片" align="center"
-                       :filters="[{text:'已上传',value:true},{text:'未上传',value: false}]"
+                       :filters="[{text:'已上传',value:1},{text:'未上传',value: 0}]"
                        filter-placement="bottom-end"
-                       column-key="filterTag"
+                       column-key="filterPicTag"
       >
         <template #default="scope">
           <el-tag v-if="scope.row.faceTemplate!==null" type="success">已上传</el-tag>
@@ -93,7 +93,8 @@ export default {
       disabled: false,
       background: false,
       loading: false,
-      aFilter:undefined
+      aFilter:undefined,
+      bFilter:undefined
     }
   },
   watch: {
@@ -107,7 +108,8 @@ export default {
   },
   methods: {
     filterChange(filters){
-      this.aFilter = filters.filterTag
+      this.aFilter = filters.filterDevTag
+      this.bFilter = filters.filterPicTag
       this.loadData()
     },
     filterOnDevice(value,row){
@@ -116,8 +118,11 @@ export default {
     loadData() {
       this.loading = true
       let aStatus=''
+      let bStatus=''
       if (this.aFilter!==undefined) aStatus = this.aFilter.join(",")
+      if (this.bFilter!==undefined) bStatus = this.bFilter.join(",")
       console.log("aStatus",aStatus)
+      console.log("bStatus",bStatus)
       request.get('/employee/findByDepIdS', {
         params: {
           pageNum: this.currentPage,
@@ -125,7 +130,8 @@ export default {
           search: this.search,
           depId: this.form.depId,
           devId: this.form.devId,
-          status:aStatus
+          statusDev:aStatus,
+          statusPic:bStatus,
         }
       }).then(res => {
         this.loading = false
