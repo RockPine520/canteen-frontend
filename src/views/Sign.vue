@@ -7,7 +7,7 @@
         </el-icon>
         新增
       </el-button>
-      <el-button type="danger" :disabled="deleteButtonShow" @click="deleteGroup">
+      <el-button type="danger" :disabled="deleteButtonShow" @click="deleteRule">
         <el-icon style="margin-right:3px">
           <DeleteFilled/>
         </el-icon>
@@ -33,16 +33,22 @@
         <template #default="scope">
           <h3 style="text-align: center">规则详情</h3>
           <el-table :data="scope.row.weekday">
-            <el-table-column label="上班日" prop="day" align="center"/>
+            <el-table-column label="上班日" prop="day" align="center">
+              <template #default="scope">
+                <span v-for="(item,index) in scope.row.day" style="margin-right: 5px">{{ weekDict[item] }}</span>
+              </template>
+            </el-table-column>
             <el-table-column label="打卡时间" prop="validCycle" align="center">
               <template #default="scope1">
                 <div v-for="(item,index) in scope1.row.validCycle" :key="index">
                   <div v-if="index===0">
+                    <el-tag style="margin-right: 10px">{{item.isOnDuty}}</el-tag>
                     <el-tag type="success">开始时间：{{ item.startTime }}</el-tag>
                     —
                     <el-tag type="warning">结束时间：{{ item.endTime }}</el-tag>
                   </div>
                   <div v-else style="margin-top: 10px">
+                    <el-tag style="margin-right: 10px">{{item.isOnDuty}}</el-tag>
                     <el-tag type="success">开始时间：{{ item.startTime }}</el-tag>
                     —
                     <el-tag type="warning">结束时间：{{ item.endTime }}</el-tag>
@@ -59,7 +65,7 @@
         <template #default="scope">
           <el-button link type="primary" size="small" @click="handleSendRule(scope.row)">下发</el-button>
           <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
-          <el-button link type="primary" size="small" @click="handleDetail(scope.row)">详情</el-button>
+          <el-button link type="primary" size="small" @click="handleSendToDep(scope.row)">已下发列表</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -104,7 +110,7 @@
           </el-tag>
           打卡时间:
           <el-tag v-for="(validTime,vIndex) in oneWeekDay.validCycle" :key="vIndex" style="margin: 0 5px">
-            {{ validTime.startTime }} — {{ validTime.endTime }} 【{{dutyDict[validTime.isOnDuty]}}】
+            {{ validTime.startTime }} — {{ validTime.endTime }} 【{{ dutyDict[validTime.isOnDuty] }}】
           </el-tag>
           <el-button size="small" type="primary" @click="editSignDay(index)" style="margin-left: 5px">修改</el-button>
           <el-button size="small" type="danger" @click="deleteSignDay(index)">删除</el-button>
@@ -159,10 +165,10 @@
                             style="margin-left: 10px">
                 <el-select :disabled="index!==nIndex" v-model="validTime.isOnDuty" placeholder="打卡类型">
                   <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
                   >
                   </el-option>
                 </el-select>
@@ -226,7 +232,8 @@
               </el-form-item>
               <el-form-item :prop="`validCycle.${index}.isOnDuty`" :rules="timeRules.isOnDuty"
                             style="margin-left: 10px">
-                <el-select :disabled="index!==nIndex" v-model="validTime.isOnDuty" placeholder="打卡类型" style="width: 100px">
+                <el-select :disabled="index!==nIndex" v-model="validTime.isOnDuty" placeholder="打卡类型"
+                           style="width: 100px">
                   <el-option
                       v-for="item in options"
                       :key="item.value"
@@ -257,26 +264,137 @@
       </template>
     </el-dialog>
 
-    <!--    编辑规则（没写呢）-->
+    <!--    编辑规则-->
     <el-dialog
         v-model="editDialogVisible"
         title="编辑规则"
-        width="30%"
-        :before-close="editClose"
+        width="60%"
+        :before-close="editRuleClose"
     >
-      <el-form :model="form" :rules="rules" ref="editFormRef" label-width="70px" :label-position='labelPosition'>
-        <el-form-item label="部门名" prop="depName">
-          <el-input v-model="form.depName" style="width: 90%"/>
+      <el-form :model="form" :rules="rules" ref="editFormRef" label-width="80px" :label-position='labelPosition'>
+        <el-form-item label="规则名称" prop="ruleName">
+          <el-input v-model="form.ruleName" style="width: 90%"/>
+        </el-form-item>
+        <el-form-item label="考勤时间">
+          <el-button type="primary" @click="timeDialogOpen" :disabled="timeButtonAble">
+            <el-icon style="margin-right:3px">
+              <CirclePlusFilled/>
+            </el-icon>
+            新增
+          </el-button>
+        </el-form-item>
+        <el-form-item v-for="(oneWeekDay,index) in form.weekday" :key="index"
+                      style="margin-bottom: 10px">
+          工作日:
+          <el-tag v-for="(oneDay,oIndex) in oneWeekDay.day" :key="oIndex" style="margin: 0 5px">
+            {{ weekDict[oneDay] }}
+          </el-tag>
+          打卡时间:
+          <el-tag v-for="(validTime,vIndex) in oneWeekDay.validCycle" :key="vIndex" style="margin: 0 5px">
+            {{ validTime.startTime }} — {{ validTime.endTime }} 【{{ dutyDict[validTime.isOnDuty] }}】
+          </el-tag>
+          <el-button size="small" type="primary" @click="editSignDay(index)" style="margin-left: 5px">修改</el-button>
+          <el-button size="small" type="danger" @click="deleteSignDay(index)">删除</el-button>
         </el-form-item>
       </el-form>
       <template #footer>
       <span class="dialog-footer">
-        <el-button @click="editDialogClose('editFormRef')">取消</el-button>
-        <el-button type="primary" @click="editSave('editFormRef')">
+        <el-button @click="editRuleClose">取消</el-button>
+        <el-button type="primary" @click="editRuleSave('editFormRef')">
           保存
         </el-button>
       </span>
       </template>
+    </el-dialog>
+
+    <!--    下发规则（选择部门）-->
+    <el-dialog
+        v-model="sendDialogVisible"
+        title="选择下发的部门"
+        width="30%"
+        :before-close="sendRuleClose"
+    >
+      <el-form :model="sendForm" :rules="sendRules" ref="sendFormRef" label-width="80px" :label-position='labelPosition' v-loading="sLoading">
+        <el-form-item label="员工部门" prop="depId">
+          <el-select v-model="sendForm.depId" placeholder="请选择" style="width: 90%">
+            <el-option
+            v-for="item in groupOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="员工类别" prop="typeId">
+          <el-select v-model="sendForm.typeId" placeholder="请选择" style="width: 90%">
+            <el-option
+                v-for="item in typeOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="sendRuleClose">取消</el-button>
+        <el-button type="primary" @click="sendRuleSave('sendFormRef')">
+          下发
+        </el-button>
+      </span>
+      </template>
+    </el-dialog>
+
+    <!--    已下发列表-->
+    <el-dialog
+        v-model="sendToDepVisible"
+        title="已下发列表"
+        width="60%"
+        :before-close="sendToDepClose"
+    >
+      <div style="margin-left: 15px">
+        <el-input v-model="search" placeholder="请输入关键字" style="width: 30%" clearable></el-input>
+        <el-button type="primary" style="margin-left: 5px" @click="loadDepData">查询</el-button>
+        <el-button type="danger" :disabled="depDeleteButtonShow" @click="deleteSendDep"
+                   style="float: right; margin-right: 15px">
+          <el-icon style="margin-right:3px">
+            <DeleteFilled/>
+          </el-icon>
+          从下发设备中删除
+        </el-button>
+      </div>
+      <el-table :data="depData"
+                v-loading="depLoading"
+                stripe
+                style="width: 100%"
+                @selection-change="depSelectionChange"
+                max-height="300"
+      >
+        <el-table-column
+            type="selection"
+            width="30">
+        </el-table-column>
+        <el-table-column sortable prop="depId" label="ID" align="center"/>
+        <el-table-column prop="depName" label="员工部门" align="center"/>
+        <el-table-column prop="typeName" label="员工类别" align="center"/>
+      </el-table>
+      <div>
+        <el-pagination
+            :current-page="depCurrentPage"
+            :page-size="depPageSize"
+            :page-sizes="[10, 50, 100]"
+            :small="small"
+            :disabled="disabled"
+            :background="background"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="depTotal"
+            @size-change="depSizeChange"
+            @current-change="depCurrentChange"
+        />
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -299,6 +417,8 @@ export default {
       editDialogVisible: false,
       setSignTimeVisible: false,
       editSignTimeVisible: false,
+      sendDialogVisible:false,
+      sendToDepVisible:false,
       form: {
         ruleId: "",
         ruleName: "",
@@ -306,6 +426,7 @@ export default {
       },
       setTimeForm: {},
       editTimeForm: {},
+      sendForm:{},
       addTimeAble: true,
       sTime: '03:00',
       eTime: '22:00',
@@ -331,6 +452,14 @@ export default {
           {required: true, message: "请选择工作日", trigger: 'change'}
         ]
       },
+      sendRules:{
+        depId:[
+          {required:true,message:"请选择下发部门",trigger:'change'}
+        ],
+        typeId:[
+          {required:true,message:"请选择员工类别",trigger:'change'}
+        ]
+      },
       addLabel: 'test',
       rowData: '',
       loading: true,
@@ -339,6 +468,9 @@ export default {
       currentPage: 1,
       pageSize: 10,
       total: 0,
+      depCurrentPage:1,
+      depPageSize:10,
+      depTotal:0,
       small: false,
       background: false,
       disabled: false,
@@ -356,9 +488,9 @@ export default {
         6: "周六",
         7: "周日"
       },
-      dutyDict:{
-        true:'签到',
-        false:'签退'
+      dutyDict: {
+        true: '签到',
+        false: '签退'
       },
       tempArray: undefined,
       tempCheck: undefined,
@@ -368,7 +500,15 @@ export default {
       }, {
         value: false,
         label: '签退'
-      }]
+      }],
+      groupOptions:[],
+      typeOptions:[],
+      sLoading:false,
+      depData:[],
+      depLoading:false,
+      depMultipleSelection:[],
+      depDeleteButtonShow:true,
+      ruleIdHandle:undefined,
     }
   },
 
@@ -544,24 +684,24 @@ export default {
         this.total = res.data.total
         this.loading = false
         console.log("ruledata", this.tableData)
-        let trans = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-        // 取出weekday和validCycle
-        let temp = this.tableData.map(item => {
-          console.log("item", item)
-          let tmp = []
-          item.weekday.forEach(i => {
-            // 日期格式转化
-            i.day = i.day.map(t => {
-              return trans[t - 1]
-            })
-            tmp.push({
-              day: i.day,
-              validCycle: i.validCycle
-            })
-          })
-          return tmp
-        })
-        this.aWeekdays = temp
+        // let trans = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+        // // 取出weekday和validCycle
+        // let temp = this.tableData.map(item => {
+        //   console.log("item", item)
+        //   let tmp = []
+        //   item.weekday.forEach(i => {
+        //     // 日期格式转化
+        //     i.day = i.day.map(t => {
+        //       return trans[t - 1]
+        //     })
+        //     tmp.push({
+        //       day: i.day,
+        //       validCycle: i.validCycle
+        //     })
+        //   })
+        //   return tmp
+        // })
+        // this.aWeekdays = temp
       })
 
 
@@ -581,14 +721,22 @@ export default {
       this.deleteButtonShow = this.multipleSelection.length <= 0;
     },
     handleEdit(row) {
+      // 编辑规则
+      console.log("row", row)
       this.form = JSON.parse(JSON.stringify(row))
+      for (let i of this.form.weekday) {
+        for (let j of i.day) {
+          this.checkList[j - 1] = true
+        }
+      }
+      this.timeButtonAble = !this.checkList.includes(false);
       this.editDialogVisible = true
     },
     addRuleClose() {
       this.addDialogVisible = false
       this.$refs.addFormRef.resetFields()
     },
-    editClose() {
+    editRuleClose() {
       this.editDialogVisible = false
       this.$refs.editFormRef.resetFields()
     },
@@ -603,13 +751,12 @@ export default {
       this.$refs[formName].resetFields()
     },
 
-
     async addRuleSave(formName) {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
           console.log("调用新增规则接口")
-          request.post('/department/addDep', this.form).then(res => {
-            console.log("addDep", res)
+          request.post('/rule/addPassRule', this.form).then(res => {
+            console.log("addPassRule", res)
             if (res["code"] === 1) {
               this.$message({
                 message: res.data,
@@ -628,13 +775,13 @@ export default {
         }
       })
     },
-    async editSave(formName) {
+    async editRuleSave(formName) {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
-          console.log("调用修改部门接口")
+          console.log("调用修改规则接口")
           console.log("edit", this.form)
-          request.post('/department/editDep', this.form).then(res => {
-            console.log("editres", res)
+          request.post('/rule/editPassRule', this.form).then(res => {
+            console.log("editPassRule", res)
             if (res["code"] === 1) {
               this.$message({
                 message: res.data,
@@ -653,39 +800,131 @@ export default {
         }
       })
     },
-    deleteGroup() {
-      this.$confirm('此操作将永久删除部门信息，是否继续？', '提示', {
+    deleteRule() {
+      this.$confirm('此操作将永久删除规则信息，是否继续？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async () => {
-        for (let i = 0; i < this.multipleSelection.length; i++) {
-          console.log("调用删除部门接口")
-          request.post('/department/delDep', this.multipleSelection[i]).then(res => {
+        let ids = []
+        for (let i of this.multipleSelection) {
+          ids.push(i.ruleId)
+        }
+        console.log("调用删除规则接口")
+        console.log("ids", ids)
+        request.post('/rule/delsPassRuleFromDb', ids).then(res => {
+          if (res["code"] === 1) {
+            this.$message({
+              message: res.data,
+              type: 'success'
+            })
+            this.loadData()
+          } else {
+            this.$message.error({
+              message: res.msg
+            })
+          }
+        })
+        this.loadData()
+      })
+    },
+    handleSendRule(row){
+      console.log(row)
+      this.sendDialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.sendFormRef.resetFields()
+      })
+      this.sendForm.ruleId = row.ruleId
+      request.get('/department/all').then(res=>{
+        this.groupOptions = res.data.map(item=>{
+          return {value:item.depId,label:item.depName}
+        })
+      })
+    },
+    sendRuleClose() {
+      this.sendDialogVisible = false
+    },
+    async sendRuleSave(formName) {
+      console.log("save",this.sendForm)
+      await this.$refs[formName].validate((valid) => {
+        if (valid) {
+          console.log("调用下发规则接口")
+          console.log("sendRule", this.sendForm)
+          this.sLoading = true
+          request.post('/rule/sendRule/'+this.sendForm.ruleId+'&'+this.sendForm.depId).then(res => {
+            console.log("sendRuleRes", res)
             if (res["code"] === 1) {
               this.$message({
                 message: res.data,
                 type: 'success'
               })
+              this.sendRuleClose()
               this.loadData()
+              this.sLoading = false
             } else {
               this.$message.error({
                 message: res.msg
               })
+              this.sLoading = false
             }
+          }).catch(err=>{
+            this.$message({
+              message: err,
+              type: 'error'
+            })
+            this.sLoading = false
           })
+        } else {
+          console.log("下发校验失败")
         }
-        this.loadData()
       })
+    },
+    loadDepData(){
+      request.get('/department/getByRuleId',{
+        params:{
+          pageNum:this.depCurrentPage,
+          pageSize:this.depPageSize,
+          search:this.search,
+          ruleId:this.ruleIdHandle
+        }
+      }).then(res=>{
+        console.log("page",res)
+        this.depData = res.data.records
+        this.depTotal = res.data.total
+      })
+    },
+    depSelectionChange(val) {
+      this.depMultipleSelection = JSON.parse(JSON.stringify(val))
+      this.depDeleteButtonShow = this.depMultipleSelection.length <= 0;
+    },
+    handleSendToDep(row) {
+      this.sendToDepVisible = true
+      this.ruleIdHandle = row.ruleId
+      this.loadDepData()
+      // this.depData = []
+    },
+    sendToDepClose() {
+      this.sendToDepVisible = false
+    },
+    depSizeChange(val) {
+      console.log(`${val} items per page`)
+      this.depPageSize = val
+      this.loadDepData()
+    },
+    depCurrentChange(val) {
+      console.log(`current page: ${val}`)
+      this.depCurrentPage = val
+      this.loadDepData()
+    },
+    deleteSendDep(){
+      console.log("调用从设备删除规则接口")
     },
   },
   created() {
     this.loadData()
   },
   computed: {
-    newWeekday() {
-      return this.form.weekday.slice(1)
-    }
+
   },
 
 
