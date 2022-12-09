@@ -10,6 +10,10 @@
         <el-icon><HomeFilled /></el-icon>
         <span>部门列表</span>
       </el-menu-item>
+      <el-menu-item index="/emptype">
+        <el-icon><Stamp /></el-icon>
+        <span>工种列表</span>
+      </el-menu-item>
       <el-menu-item index="/employee">
         <el-icon><UserFilled /></el-icon>
         <span>人员列表</span>
@@ -28,11 +32,11 @@
 </template>
 
 <script>
-import {Tools, UserFilled, HomeFilled, Checked} from '@element-plus/icons-vue'
+import {Tools, UserFilled, HomeFilled, Checked, Stamp} from '@element-plus/icons-vue'
 export default {
   name:"Aside",
   components:{
-    Tools, UserFilled, HomeFilled, Checked
+    Tools, UserFilled, HomeFilled, Checked,Stamp
   },
   data(){
     return {
