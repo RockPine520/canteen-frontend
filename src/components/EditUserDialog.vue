@@ -27,6 +27,16 @@
           </el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="员工种类" prop="professionId">
+        <el-select v-model="form.professionId" placeholder="请选择" style="width: 90%">
+          <el-option
+              v-for="item in proOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="电话号码" prop="phone">
         <el-input v-model="form.phone" style="width: 90%"/>
       </el-form-item>
@@ -90,6 +100,7 @@ export default {
       multipleSelection: [],
       dialogVisible: this.editUserDialogVisible,
       groupOptions: [],
+      proOptions:[],
       form: this.formRow,
       labelPosition: 'right',
       fileList: [],
@@ -114,7 +125,11 @@ export default {
           return {value:item.depId,label:item.depName}
         })
       })
-
+      request.get("/profession/all").then(res=>{
+        this.proOptions = res.data.map(item=>{
+          return {value:item.proId,label:item.proName}
+        })
+      })
     },
 
     handleDialogClose() {
