@@ -27,6 +27,16 @@
           </el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="员工种类" prop="professionId">
+        <el-select v-model="form.professionId" placeholder="请选择" style="width: 90%">
+          <el-option
+              v-for="item in proOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+          </el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="电话号码" prop="phone">
         <el-input v-model="form.phone" style="width: 90%"/>
       </el-form-item>
@@ -91,6 +101,7 @@ export default {
       photoVisible: false,
       photoUrl: '',
       groupOptions: [],
+      proOptions:[],
       form: {},
       labelPosition: 'right',
       fileList: [],
@@ -103,7 +114,10 @@ export default {
           {required: true, message: "请选择性别", trigger: 'change'},
         ],
         depId: [
-          {required: true, message: '请选择员工组', trigger: 'change'}
+          {required: true, message: '请选择员工部门', trigger: 'change'}
+        ],
+        professionId: [
+          {required: true, message: '请选择员工种类', trigger: 'change'}
         ],
       },
     }
@@ -114,6 +128,11 @@ export default {
       request.get("/department/all").then(res => {
         this.groupOptions = res.data.map(item => {
           return {value: item.depId, label: item.depName}
+        })
+      })
+      request.get("/profession/all").then(res => {
+        this.proOptions = res.data.map(item => {
+          return {value: item.proId, label: item.proName}
         })
       })
     },

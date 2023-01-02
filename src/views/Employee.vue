@@ -46,6 +46,7 @@
       <el-table-column prop="gender" label="性别" align="center" width="100" :formatter="genderFormat"/>
       <el-table-column prop="idValid" label="员工有效期" align="center" width="240"/>
       <el-table-column prop="departmentName" label="员工部门" align="center" width="100"/>
+      <el-table-column prop="proName" label="员工种类" align="center" width="100"/>
       <el-table-column prop="isDistributed" label="是否下发" align="center" width="100"
                        :filters="[{text:'已下发',value:1},{text:'未下发',value:0}]"
                        column-key="filterTag"
@@ -63,7 +64,7 @@
           <el-button link type="primary" size="small" @click="handleDetail(scope.row)">用户详情</el-button>
           <el-button link type="primary" size="small" @click="openSendDevice(scope.row)">已下发设备</el-button>
           <el-button link type="primary" size="small" @click="handleEdit(scope.row)">修改</el-button>
-          <el-button link type="primary" size="small">识别记录</el-button>
+          <el-button link type="primary" size="small" @click="recogDetail(scope.row)">识别记录</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -127,6 +128,48 @@
       </el-table>
 
     </el-dialog>
+<!--    识别记录-->
+    <el-dialog
+        v-model="recogDialogVisible"
+        :title="'【'+rowUserName2+'】识别记录'"
+        width="68%"
+        :before-close="recogClose"
+    >
+      <el-table :data="recogData"
+                v-loading="recogLoading"
+                stripe
+                style="width: 100%"
+                @selection-change="handleSelectionChange"
+      >
+        <el-table-column sortable prop="deviceName" label="设备编号" align="center"/>
+        <el-table-column prop="recogTime" label="识别时间" align="center"/>
+        <el-table-column prop="confidence" label="相似度（％）" align="center"/>
+        <el-table-column prop="bodyTemperature" label="体温数据（℃）" align="center"/>
+        <el-table-column label="识别图片" align="center">
+          <template #default="scope">
+            <el-image
+                style="width: 100px; height: 100px"
+                :src="'http://localhost:8089/common/downloadRec?name='+scope.row.photo"
+                :preview-src-list="['http://localhost:8089/common/downloadRec?name='+scope.row.photo]"
+                :z-index="3000">
+            </el-image>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+          :current-page="currentRecogPage"
+          :page-size="pageRecogSize"
+          :page-sizes="[10, 50, 100]"
+          :small="small"
+          :disabled="disabled"
+          :background="background"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="totalRecog"
+          @size-change="recogSizeChange"
+          @current-change="recogCurrentChange"
+      />
+    </el-dialog>
+
   </div>
 </template>
 
@@ -147,12 +190,17 @@ export default {
       pageSize: 10,
       total: 0,
       search: '',
+      currentRecogPage:1,
+      pageRecogSize: 10,
+      totalRecog: 0,
+      recogLoading:false,
       small: false,
       background: false,
       disabled: false,
       addUserDialogVisible: false,
       editUserDialogVisible: false,
       detailDialogVisible:false,
+      recogDialogVisible:false,
       deleteButtonShow: true,
       loading:true,
       form:{},
@@ -160,8 +208,11 @@ export default {
       deviceLoading:false,
       deviceData:[],
       rowUserName:'',
+      rowUserName2:'',
       rowUserId:-1,
-      aFilter:undefined
+      rowUserId2:-1,
+      aFilter:undefined,
+      recogData:[],
     }
   },
   components: {
@@ -218,12 +269,19 @@ export default {
             this.deviceLoading = false
             this.loadData()
           })
+        }).catch(err=>{
+          this.$message({
+            message: err,
+            type: 'error'
+          })
+          this.deviceLoading = false
         })
       }).catch(err => {
         this.$message({
           message: err,
           type: 'error'
         })
+        this.deviceLoading = false
       })
     },
     genderFormat(row){
@@ -350,6 +408,58 @@ export default {
         })
       })
     },
+    loadRecogData(){
+      this.recogLoading = true
+      request.get("/attendance/findPageById",{
+        params:{
+          pageNum:this.currentRecogPage,
+          pageSize:this.pageRecogSize,
+          userId:this.rowUserId2
+        }
+      }).then(res=>{
+        console.log("res",res)
+        this.recogData = res.data.records
+        this.totalRecog = res.data.total
+        this.recogLoading = false
+      }).catch(err=>{
+        this.$message({
+          message: err,
+          type: 'error'
+        })
+        this.recogLoading = false
+      })
+      // this.recogData = [
+      //   {
+      //     deviceName:"ET11111",
+      //     recogTime:'131313',
+      //     confidence:95,
+      //     bodyTemperature:36,
+      //     photo:null
+      //   }
+      // ]
+    },
+    recogDetail(row) {
+      console.log("row",row)
+      this.rowUserName2 = row.name
+      this.rowUserId2 = row.userId
+      this.recogDialogVisible = true
+      this.loadRecogData()
+    },
+    recogSizeChange(val) {
+      console.log(`${val} items per page`)
+      this.pageRecogSize = val
+      this.loadRecogData()
+    },
+    recogCurrentChange(val) {
+      console.log(`current page: ${val}`)
+      this.currentRecogPage = val
+      this.loadRecogData()
+    },
+    recogClose() {
+      this.recogDialogVisible = false
+      this.recogData = []
+      this.rowUserName2 = ''
+    },
   },
   created() {
     this.loadData()
@@ -361,5 +471,13 @@ export default {
 <style scoped>
 .button-group {
   padding: 15px;
+}
+
+:deep .el-table__inner-wrapper::before {
+  z-index: 0;
+}
+
+:deep .el-select .el-input .el-select__caret.el-icon {
+  z-index: 0;
 }
 </style>

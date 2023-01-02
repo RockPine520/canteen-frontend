@@ -27,6 +27,7 @@
       <el-table-column prop="name" label="姓名" align="center" width="100"/>
       <el-table-column prop="idValid" label="员工有效期" align="center" width="180"/>
       <el-table-column prop="departmentName" label="员工部门" align="center"/>
+      <el-table-column prop="proName" label="员工种类" align="center"/>
       <el-table-column prop="isOnThisDevice" label="是否已下发到该设备" align="center"
                        :filters="[{text:'已下发',value:1},{text:'未下发',value: 0}]"
                        filter-placement="bottom-end"

@@ -27,8 +27,8 @@
           type="selection"
           width="55">
       </el-table-column>
-      <el-table-column sortable prop="typeId" label="工种编号" align="center"></el-table-column>
-      <el-table-column prop="typeName" label="工种名称" align="center"></el-table-column>
+      <el-table-column sortable prop="proId" label="工种编号" align="center"></el-table-column>
+      <el-table-column prop="proName" label="工种名称" align="center"></el-table-column>
       <el-table-column fixed="right" label="操作" align="center">
         <template #default="scope">
           <el-button link type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -56,8 +56,8 @@
         :before-close="addClose"
     >
       <el-form :model="form" :rules="rules" ref="addFormRef" label-width="80px" :label-position='labelPosition'>
-        <el-form-item label="工种名称" prop="typeName">
-          <el-input v-model="form.typeName" style="width: 90%"/>
+        <el-form-item label="工种名称" prop="proName">
+          <el-input v-model="form.proName" style="width: 90%"/>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -75,9 +75,9 @@
         width="30%"
         :before-close="editClose"
     >
-      <el-form :model="form" :rules="rules" ref="editFormRef" label-width="70px" :label-position='labelPosition'>
-        <el-form-item label="工种名称" prop="ruleName">
-          <el-input v-model="form.typeName" style="width: 90%"/>
+      <el-form :model="form" :rules="rules" ref="editFormRef" label-width="80px" :label-position='labelPosition'>
+        <el-form-item label="工种名称" prop="proName">
+          <el-input v-model="form.proName" style="width: 90%"/>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -111,7 +111,7 @@ export default {
       form: {},
       labelPosition: 'right',
       rules: {
-        typeName: [
+        proName: [
           {required: true, message: "请输入工种名称", trigger: 'blur'},
         ],
       },
@@ -132,32 +132,20 @@ export default {
 
   methods: {
     loadData() {
-      // this.loading = true
+      this.loading = true
       console.log("调用查询工种接口")
-      // request.get('/department',{
-      //   params:{
-      //     pageNum:this.currentPage,
-      //     pageSize:this.pageSize,
-      //     search:this.search
-      //   }
-      // }).then(res=>{
-      //   console.log("dep_pa",res)
-      //   this.tableData = res.data.records
-      //   this.total = res.data.total
-      //   this.loading = false
-      // })
-      this.tableData = [{
-        typeId: 1,
-        typeName: '厨师',
-      }, {
-        typeId: 2,
-        typeName: '清洁工',
-      }, {
-        typeId: 3,
-        typeName: '洗碗工',
-      }]
-
-
+      request.get('/profession',{
+        params:{
+          pageNum:this.currentPage,
+          pageSize:this.pageSize,
+          search:this.search
+        }
+      }).then(res=>{
+        console.log("pro_res",res)
+        this.tableData = res.data.records
+        this.total = res.data.total
+        this.loading = false
+      })
     },
     handleSizeChange(val) {
       console.log(`${val} items per page`)
@@ -202,9 +190,9 @@ export default {
     async addSave(formName) {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
-          console.log("调用新增部门接口")
-          request.post('/department/addDep',this.form).then(res=>{
-            console.log("addDep",res)
+          console.log("调用新增工种接口")
+          request.post('/profession/addPro',this.form).then(res=>{
+            console.log("addPro",res)
             if (res["code"] === 1) {
               this.$message({
                 message:res.data,
@@ -227,9 +215,9 @@ export default {
     async editSave(formName) {
       await this.$refs[formName].validate((valid) => {
         if (valid) {
-          console.log("调用修改部门接口")
+          console.log("调用修改工种接口")
           console.log("edit", this.form)
-          request.post('/department/editDep',this.form).then(res=>{
+          request.post('/profession/editPro',this.form).then(res=>{
             console.log("editres",res)
             if (res["code"] === 1) {
               this.$message({
@@ -257,8 +245,8 @@ export default {
         type:'warning'
       }).then(async ()=>{
         for (let i = 0; i < this.multipleSelection.length; i++) {
-          console.log("调用删除部门接口")
-          request.post('/department/delDep',this.multipleSelection[i]).then(res=>{
+          console.log("调用删除工种接口")
+          request.post('/profession/delPro',this.multipleSelection[i]).then(res=>{
             if (res["code"] === 1) {
               this.$message({
                 message:res.data,

@@ -22,10 +22,22 @@
         <el-icon><Tools /></el-icon>
         <span>设备列表</span>
       </el-menu-item>
-      <el-menu-item index="/sign">
-        <el-icon><Checked /></el-icon>
-        <span>签到管理</span>
-      </el-menu-item>
+<!--      <el-menu-item index="/sign">-->
+<!--        <el-icon><Checked /></el-icon>-->
+<!--        <span>签到管理</span>-->
+<!--      </el-menu-item>-->
+      <el-sub-menu>
+        <template #title>
+          <el-icon><Checked /></el-icon>
+          <span>考勤管理</span>
+        </template>
+        <el-menu-item index="/sign">
+          <span>规则列表</span>
+        </el-menu-item>
+        <el-menu-item index="/signCount">
+          <span>考勤统计</span>
+        </el-menu-item>
+      </el-sub-menu>
 
     </el-menu>
   </div>
@@ -51,5 +63,7 @@ export default {
 </script>
 
 <style scoped>
-
+:deep .el-sub-menu .el-menu-item {
+  min-width: auto;
+}
 </style>

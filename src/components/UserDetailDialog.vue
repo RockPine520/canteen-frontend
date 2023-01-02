@@ -27,6 +27,10 @@
           <div class="content">{{ form.departmentName }}</div>
         </div>
         <div>
+          <div class="title">员工种类</div>
+          <div class="content">{{ form.proName }}</div>
+        </div>
+        <div>
           <div class="title">电话号码</div>
           <div class="content">{{ form.phone }}</div>
         </div>

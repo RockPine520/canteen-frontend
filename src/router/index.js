@@ -6,6 +6,7 @@ import Sign from "@/views/Sign";
 import Device from "@/views/Device";
 import EmpGroup from "@/views/EmpGroup";
 import EmpType from "@/views/EmpType";
+import SignCount from "@/views/SignCount";
 
 const routes = [
     {
@@ -23,6 +24,11 @@ const routes = [
                 path: '/sign',
                 name: 'sign',
                 component: Sign
+            },
+            {
+                path: '/signCount',
+                name: 'signCount',
+                component: SignCount
             },
             {
                 path: '/device',
