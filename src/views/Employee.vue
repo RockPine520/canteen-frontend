@@ -7,12 +7,12 @@
         </el-icon>
         新增
       </el-button>
-      <el-button type="primary">
-        <el-icon style="margin-right:3px ">
-          <CirclePlusFilled/>
-        </el-icon>
-        批量导入
-      </el-button>
+<!--      <el-button type="primary">-->
+<!--        <el-icon style="margin-right:3px ">-->
+<!--          <CirclePlusFilled/>-->
+<!--        </el-icon>-->
+<!--        批量导入-->
+<!--      </el-button>-->
       <el-button type="danger" :disabled="deleteButtonShow" @click="deleteUser">
         <el-icon style="margin-right:3px">
           <DeleteFilled/>
@@ -151,7 +151,8 @@
                 style="width: 100px; height: 100px"
                 :src="'http://localhost:8089/common/downloadRec?name='+scope.row.photo"
                 :preview-src-list="['http://localhost:8089/common/downloadRec?name='+scope.row.photo]"
-                :z-index="3000">
+                fit="cover"
+                preview-teleported="true">
             </el-image>
           </template>
         </el-table-column>
@@ -473,11 +474,4 @@ export default {
   padding: 15px;
 }
 
-:deep .el-table__inner-wrapper::before {
-  z-index: 0;
-}
-
-:deep .el-select .el-input .el-select__caret.el-icon {
-  z-index: 0;
-}
 </style>

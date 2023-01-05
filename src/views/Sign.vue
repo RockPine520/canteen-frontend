@@ -129,7 +129,7 @@
     <el-dialog
         v-model="setSignTimeVisible"
         title="设置打卡时间"
-        width="50%"
+        width="70%"
         :before-close="timeClose"
     >
       <!--      注：weekday这个字段实现了双向绑定-->
@@ -149,32 +149,42 @@
           <el-form-item v-for="(validTime,index) in setTimeForm.validCycle" :key="validTime.key">
             <div :class="index===0?'normal':'mgt10px'">
               <el-tag>
-                时间段{{ index + 1 }}
+                签到时间段{{ index + 1 }}
               </el-tag>
-              <el-form-item :prop="`validCycle.${index}.startTime`" :rules="timeRules.startTime"
+              <el-form-item :prop="`validCycle.${index}.${0}.startTime`" :rules="timeRules.startTime"
                             style="margin-left: 10px">
-                <el-time-select :disabled="index!==nIndex" v-model="validTime.startTime" placeholder="开始时间"
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[0].startTime" placeholder="开始时间"
                                 :start="sTime" :step="timeStep" :end="eTime"
-                                :max-time="validTime.endTime"></el-time-select>
+                                :max-time="validTime[0].endTime"></el-time-select>
               </el-form-item>
-              <el-form-item :prop="`validCycle.${index}.endTime`" :rules="timeRules.endTime" style="margin-left: 10px">
-                <el-time-select :disabled="index!==nIndex" v-model="validTime.endTime" placeholder="结束时间" :start="sTime"
-                                :step="timeStep" :end="eTime" :min-time="validTime.startTime"></el-time-select>
-              </el-form-item>
-              <el-form-item prop="type" :rules="timeRules.type"
+              <el-form-item :prop="`validCycle.${index}.${0}.endTime`" :rules="timeRules.endTime"
                             style="margin-left: 10px">
-                <el-select :disabled="index!==nIndex" v-model="setTimeForm.type[index]" placeholder="打卡类型">
-                  <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                  >
-                  </el-option>
-                </el-select>
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[0].endTime" placeholder="结束时间"
+                                :start="sTime"
+                                :step="timeStep" :end="eTime"
+                                :max-time="validTime[1].startTime"
+                                :min-time="validTime[0].startTime"></el-time-select>
               </el-form-item>
-              <el-button :disabled="index!==nIndex || validTime.startTime.length===0 || validTime.endTime.length===0"
-                         type="primary" @click.prevent="addValidTime(validTime.endTime,index)"
+              <el-tag style="margin-left: 12px">
+                签退时间段{{ index + 1 }}
+              </el-tag>
+              <el-form-item :prop="`validCycle.${index}.${1}.startTime`" :rules="timeRules.startTime"
+                            style="margin-left: 10px">
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[1].startTime" placeholder="开始时间"
+                                :start="sTime" :step="timeStep" :end="eTime"
+                                :max-time="validTime[1].endTime"
+                                :min-time="validTime[0].endTime"></el-time-select>
+              </el-form-item>
+              <el-form-item :prop="`validCycle.${index}.${1}.endTime`" :rules="timeRules.endTime"
+                            style="margin-left: 10px">
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[1].endTime" placeholder="结束时间"
+                                :start="sTime"
+                                :step="timeStep" :end="eTime"
+                                :min-time="validTime[1].startTime"></el-time-select>
+              </el-form-item>
+              <el-button :disabled="index!==nIndex || validTime[0].startTime.length===0 || validTime[0].endTime.length===0
+               || validTime[1].startTime.length===0 || validTime[1].endTime.length===0"
+                         type="primary" @click.prevent="addValidTime(validTime[1].endTime,index)"
                          style="margin-left: 12px">新增
               </el-button>
               <el-button :disabled="index!==nIndex || index===0" type="danger"
@@ -198,7 +208,7 @@
     <el-dialog
         v-model="editSignTimeVisible"
         title="修改打卡时间"
-        width="50%"
+        width="70%"
         :before-close="editTimeClose"
     >
       <!--      注：weekday这个字段实现了双向绑定-->
@@ -218,33 +228,42 @@
           <el-form-item v-for="(validTime,index) in editTimeForm.validCycle" :key="validTime.key">
             <div :class="index===0?'normal':'mgt10px'">
               <el-tag>
-                时间段{{ index + 1 }}
+                签到时间段{{ index + 1 }}
               </el-tag>
-              <el-form-item :prop="`validCycle.${index}.startTime`" :rules="timeRules.startTime"
+              <el-form-item :prop="`validCycle.${index}.${0}.startTime`" :rules="timeRules.startTime"
                             style="margin-left: 10px">
-                <el-time-select :disabled="index!==nIndex" v-model="validTime.startTime" placeholder="起始时间"
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[0].startTime" placeholder="开始时间"
                                 :start="sTime" :step="timeStep" :end="eTime"
-                                :max-time="validTime.endTime"></el-time-select>
+                                :max-time="validTime[0].endTime"></el-time-select>
               </el-form-item>
-              <el-form-item :prop="`validCycle.${index}.endTime`" :rules="timeRules.endTime" style="margin-left: 10px">
-                <el-time-select :disabled="index!==nIndex" v-model="validTime.endTime" placeholder="结束时间" :start="sTime"
-                                :step="timeStep" :end="eTime" :min-time="validTime.startTime"></el-time-select>
-              </el-form-item>
-              <el-form-item prop="type" :rules="timeRules.type"
+              <el-form-item :prop="`validCycle.${index}.${0}.endTime`" :rules="timeRules.endTime"
                             style="margin-left: 10px">
-                <el-select :disabled="index!==nIndex" v-model="editTimeForm.type[index]" placeholder="打卡类型"
-                           style="width: 100px">
-                  <el-option
-                      v-for="item in options"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                  >
-                  </el-option>
-                </el-select>
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[0].endTime" placeholder="结束时间"
+                                :start="sTime"
+                                :step="timeStep" :end="eTime"
+                                :max-time="validTime[1].startTime"
+                                :min-time="validTime[0].startTime"></el-time-select>
               </el-form-item>
-              <el-button :disabled="index!==nIndex || validTime.startTime.length===0 || validTime.endTime.length===0"
-                         type="primary" @click.prevent="editAddValidTime(validTime.endTime,index)"
+              <el-tag style="margin-left: 12px">
+                签退时间段{{ index + 1 }}
+              </el-tag>
+              <el-form-item :prop="`validCycle.${index}.${1}.startTime`" :rules="timeRules.startTime"
+                            style="margin-left: 10px">
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[1].startTime" placeholder="开始时间"
+                                :start="sTime" :step="timeStep" :end="eTime"
+                                :max-time="validTime[1].endTime"
+                                :min-time="validTime[0].endTime"></el-time-select>
+              </el-form-item>
+              <el-form-item :prop="`validCycle.${index}.${1}.endTime`" :rules="timeRules.endTime"
+                            style="margin-left: 10px">
+                <el-time-select :disabled="index!==nIndex" v-model="validTime[1].endTime" placeholder="结束时间"
+                                :start="sTime"
+                                :step="timeStep" :end="eTime"
+                                :min-time="validTime[1].startTime"></el-time-select>
+              </el-form-item>
+              <el-button :disabled="index!==nIndex || validTime[0].startTime.length===0 || validTime[0].endTime.length===0
+               || validTime[1].startTime.length===0 || validTime[1].endTime.length===0"
+                         type="primary" @click.prevent="editAddValidTime(validTime[1].endTime,index)"
                          style="margin-left: 12px">新增
               </el-button>
               <el-button :disabled="index!==nIndex || index===0" type="danger"
@@ -551,14 +570,27 @@ export default {
       // })
       // setTimeForm as 'weekday' array
       this.setTimeForm['day'] = [] // 存int
-      this.setTimeForm['validCycle'] = [{
-        startTime: '',
-        endTime: '',
-        key: Date.now()
-      }]
+      // this.setTimeForm['validCycle'] = [{
+      //   startTime: '',
+      //   endTime: '',
+      //   key: Date.now()
+      // }]
+      // n*2的数组
+      this.setTimeForm['validCycle'] = [[
+        {
+          startTime: '',
+          endTime: '',
+          key: Date.now()
+        }, //签到
+        {
+          startTime: '',
+          endTime: '',
+          key: Date.now()
+        } // 签退
+      ]]
       this.setTimeForm['type'] = []
       // 存对象
-
+      this.sTime = '03:00'
       this.nIndex = 0
       this.$nextTick(() => {
         this.$refs.timeFormRef.resetFields()
@@ -567,11 +599,20 @@ export default {
       console.log("this.setTimeForm", this.setTimeForm)
     },
     addValidTime(cutTime, index) {
-      this.setTimeForm.validCycle.push({
+      // this.setTimeForm.validCycle.push({
+      //   startTime: '',
+      //   endTime: '',
+      //   key: Date.now()
+      // })
+      this.setTimeForm.validCycle.push([{
         startTime: '',
         endTime: '',
         key: Date.now()
-      })
+      }, {
+        startTime: '',
+        endTime: '',
+        key: Date.now()
+      }])
       if (cutTime.length !== 0) {
         this.sTime = cutTime
         this.nIndex = index + 1
@@ -581,20 +622,44 @@ export default {
       let index = this.setTimeForm.validCycle.indexOf(item)
       if (index !== 0) {
         this.setTimeForm.validCycle.splice(index, 1)
+        this.setTimeForm.type.splice(index, 1)  //wait
         this.nIndex = index - 1
+        console.log("this.setTimeForm",this.setTimeForm)
+        let len = this.setTimeForm.validCycle.length
+        if (len===1) {
+          this.sTime = '03:00'
+        } else this.sTime = this.setTimeForm.validCycle[len-2][1].endTime
       }
     },
     timeDialogSave(forName) {
+      // console.log("setTimeForm", this.setTimeForm.validCycle)
+      // let tmpArr = []
+      // for (let i of this.setTimeForm.validCycle) {
+      //   tmpArr = tmpArr.concat(i)
+      // }
+      // this.setTimeForm.validCycle = JSON.parse(JSON.stringify(tmpArr))
+      // for (let i = 0; i < this.setTimeForm.validCycle.length; i++) {
+      //   this.setTimeForm.type[i] = i%2
+      // }
       console.log("setTimeForm", this.setTimeForm)
+      let tmpForm = JSON.parse(JSON.stringify(this.setTimeForm))
       this.$refs[forName].validate((valid) => {
         if (valid) {
+          let tmpArr = []
+          for (let i of tmpForm.validCycle) {
+            tmpArr = tmpArr.concat(i)
+          }
+          tmpForm.validCycle = JSON.parse(JSON.stringify(tmpArr))
+          for (let i = 0; i < tmpForm.validCycle.length; i++) {
+            tmpForm.type[i] = i % 2
+          }
           this.setSignTimeVisible = false
-          this.setTimeForm.day.sort()
-          for (let index of this.setTimeForm.day) {
+          tmpForm.day.sort()
+          for (let index of tmpForm.day) {
             this.checkList[index - 1] = true
           }
-          let tmp = JSON.parse(JSON.stringify(this.setTimeForm))
-          this.form.weekday.push(tmp)
+          // tmpForm = JSON.parse(JSON.stringify(this.setTimeForm))
+          this.form.weekday.push(tmpForm)
           this.timeButtonAble = !this.checkList.includes(false);
         }
       })
@@ -609,17 +674,31 @@ export default {
     editSignDay(index) {
       this.editSignTimeVisible = true
       this.editWeekIndex = index
-      this.editTimeForm = JSON.parse(JSON.stringify(this.form.weekday[index]))  // 深拷贝
+      this.editTimeForm = JSON.parse(JSON.stringify(this.form.weekday[index])) // 深拷贝
+      // console.log("this.editTimeForm", this.editTimeForm)
+      // console.log("b", b)
+      let tmpArr = []
+      let i = 0
+      // 数组拆分
+      while (i < this.editTimeForm.validCycle.length) {
+        tmpArr.push(JSON.parse(JSON.stringify(this.editTimeForm.validCycle.slice(i,i+=2))))
+      }
+      // console.log("tmpArr",tmpArr)
+      this.editTimeForm.validCycle = tmpArr
+      // console.log("this.editTimeForm2", this.editTimeForm)
       // index表示weekday下标
       this.tempArray = JSON.parse(JSON.stringify(this.editTimeForm))
       this.tempCheck = JSON.parse(JSON.stringify(this.checkList))
-      console.log("before", this.tempArray)
+      // console.log("before", this.tempArray)
       for (let i of this.editTimeForm.day) {
         this.checkList[i - 1] = false
       }
       this.nIndex = this.editTimeForm.validCycle.length - 1
       let len = this.editTimeForm.validCycle.length
-      this.sTime = len - 2 >= 0 ? this.editTimeForm.validCycle[len - 2].endTime : "03:00"
+      if (len === 1) {
+        this.sTime = "03:00"
+      } else this.sTime = this.editTimeForm.validCycle[len - 2][1].endTime
+      // this.sTime = len - 2 >= 0 ? this.editTimeForm.validCycle[len - 2].endTime : "03:00"
     },
     deleteSignDay(index) {
       for (let i of this.form.weekday[index].day) {
@@ -634,26 +713,39 @@ export default {
       // this.weekIndex = this.weekIndex - 1 // 这个指向数组最后一位
     },
     editTimeDialogSave(forName) {
+      let tmpForm = JSON.parse(JSON.stringify(this.editTimeForm))
       this.$refs[forName].validate((valid) => {
         if (valid) {
+          let tmpArr = []
+          for (let i of tmpForm.validCycle) {
+            tmpArr = tmpArr.concat(i)
+          }
+          tmpForm.validCycle = JSON.parse(JSON.stringify(tmpArr))
+          for (let i = 0; i < tmpForm.validCycle.length; i++) {
+            tmpForm.type[i] = i % 2
+          }
           this.editSignTimeVisible = false
-          this.editTimeForm.day.sort()
+          tmpForm.day.sort()
           // this.checkList=[false, false, false, false, false, false, false]
-          for (let index of this.editTimeForm.day) {
+          for (let index of tmpForm.day) {
             this.checkList[index - 1] = true
           }
-          this.form.weekday[this.editWeekIndex] = JSON.parse(JSON.stringify(this.editTimeForm))
+          this.form.weekday[this.editWeekIndex] = JSON.parse(JSON.stringify(tmpForm))
           this.nIndex = 0
           this.timeButtonAble = !this.checkList.includes(false);
         }
       })
     },
     editAddValidTime(cutTime, index) {
-      this.editTimeForm.validCycle.push({
+      this.editTimeForm.validCycle.push([{
         startTime: '',
         endTime: '',
         key: Date.now()
-      });
+      }, {
+        startTime: '',
+        endTime: '',
+        key: Date.now()
+      }]);
       if (cutTime.length !== 0) {
         this.sTime = cutTime
         this.nIndex = index + 1
@@ -663,7 +755,12 @@ export default {
       let index = this.editTimeForm.validCycle.indexOf(item)
       if (index !== 0) {
         this.editTimeForm.validCycle.splice(index, 1)
+        this.editTimeForm.type.splice(index, 1)
         this.nIndex = index - 1
+        let len = this.editTimeForm.validCycle.length
+        if (len===1) {
+          this.sTime = '03:00'
+        } else this.sTime = this.editTimeForm.validCycle[len-2][1].endTime
       }
     },
     editTimeClose() {
@@ -873,7 +970,7 @@ export default {
       })
     },
     loadSendData() {
-      request.get('/belongPro/getDepTypeById/'+this.ruleIdHandle).then(res => {
+      request.get('/belongPro/getDepTypeById/' + this.ruleIdHandle).then(res => {
         console.log("page", res)
         this.sendData = res.data
       })
@@ -903,18 +1000,21 @@ export default {
     },
     deleteSendDep() {
       console.log("调用从设备删除规则接口")
-      console.log("dms:",this.depMultipleSelection)
+      console.log("dms:", this.depMultipleSelection)
       let ids = []
       for (let item of this.depMultipleSelection) {
-        let tmp = [item.ruleId,item.proId,item.depId]
+        let tmp = [item.ruleId, item.proId, item.depId]
         ids.push(tmp)
       }
       this.depLoading = true
-      request.post("/rule/delPassRule",ids).then(res=>{
-        console.log(res)
+      request.post("/rule/delPassRule", ids).then(res => {
+        this.$message({
+          message: res.data,
+          type: 'success'
+        })
         this.loadSendData()
         this.depLoading = false
-      }).catch(err=>{
+      }).catch(err => {
         this.$message({
           message: err,
           type: 'error'
