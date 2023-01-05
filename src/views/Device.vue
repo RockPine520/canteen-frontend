@@ -31,8 +31,8 @@
       >
       </el-table-column>
       <el-table-column sortable prop="devName" label="设备编号" align="center"/>
-      <el-table-column prop="is_online" label="是否在线" align="center"/>
-      <el-table-column prop="device_nickname" label="设备名称" align="center"/>
+<!--      <el-table-column prop="is_online" label="是否在线" align="center"/>-->
+<!--      <el-table-column prop="device_nickname" label="设备名称" align="center"/>-->
       <el-table-column prop="departmentName" label="部门名称" align="center"/>
       <el-table-column fixed="right" label="操作" width="350" align="center">
         <template #default="scope">
@@ -445,7 +445,10 @@ export default {
         if (valid) {
           console.log("调用编辑设备接口")
           console.log("edit", this.form)
-          request.post('/device/editWithDep', this.form).then(res => {
+          let sForm = JSON.parse(JSON.stringify(this.form))
+          delete sForm.departmentName
+          console.log("edit2", sForm)
+          request.post('/device/editWithDep', sForm).then(res => {
             console.log("eres", res)
             if (res["code"] === 1) {
               this.$message({

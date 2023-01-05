@@ -44,8 +44,8 @@
                        column-key="filterPicTag"
       >
         <template #default="scope">
-          <el-tag v-if="scope.row.faceTemplate!==null" type="success">已上传</el-tag>
-          <el-tag v-else-if="scope.row.faceTemplate===null" type="danger">未上传</el-tag>
+          <el-tag v-if="scope.row.faceTemplate.length!==0" type="success">已上传</el-tag>
+          <el-tag v-else-if="scope.row.faceTemplate.length===0" type="danger">未上传</el-tag>
         </template>
       </el-table-column>
     </el-table>
