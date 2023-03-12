@@ -260,6 +260,7 @@ export default {
     handleUserDetail(row) {
       console.log("调用用户详情接口")
       this.userForm = JSON.parse(JSON.stringify(row))
+      console.log("userForm",this.userForm)
       this.detailDialogVisible = true
     },
     userSelectionChange(val) {

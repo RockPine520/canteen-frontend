@@ -38,17 +38,20 @@
           <span>考勤统计</span>
         </el-menu-item>
       </el-sub-menu>
-
+      <el-menu-item index="/dataShow">
+        <el-icon><Histogram /></el-icon>
+        <span>数据统计</span>
+      </el-menu-item>
     </el-menu>
   </div>
 </template>
 
 <script>
-import {Tools, UserFilled, HomeFilled, Checked, Stamp} from '@element-plus/icons-vue'
+import {Tools, UserFilled, HomeFilled, Checked, Stamp, Histogram} from '@element-plus/icons-vue'
 export default {
   name:"Aside",
   components:{
-    Tools, UserFilled, HomeFilled, Checked,Stamp
+    Tools, UserFilled, HomeFilled, Checked,Stamp,Histogram
   },
   data(){
     return {

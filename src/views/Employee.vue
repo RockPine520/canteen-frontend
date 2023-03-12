@@ -103,24 +103,24 @@
                 @selection-change="handleSelectionChange"
       >
         <el-table-column sortable prop="devName" label="设备编号" align="center"/>
-        <el-table-column
-            prop="isOnline"
-            label="是否在线"
-            align="center"
-            :filters="[{text:'在线',value:'在线'},{text:'离线',value:'离线'}]"
-            :filter-method="filterOnline"
-            filter-placement="bottom-end"
-        >
+<!--        <el-table-column-->
+<!--            prop="isOnline"-->
+<!--            label="是否在线"-->
+<!--            align="center"-->
+<!--            :filters="[{text:'在线',value:'在线'},{text:'离线',value:'离线'}]"-->
+<!--            :filter-method="filterOnline"-->
+<!--            filter-placement="bottom-end"-->
+<!--        >-->
 <!--          <template #default="scope">-->
 <!--            <el-tag-->
 <!--                :type="scope.row.isOnline==='在线'?'success':'danger'"-->
 <!--            >{{scope.row.isOnline}}</el-tag>-->
 <!--          </template>-->
 
-        </el-table-column>
-        <el-table-column prop="deviceNickname" label="设备名称" align="center"/>
+<!--        </el-table-column>-->
+<!--        <el-table-column prop="deviceNickname" label="设备名称" align="center"/>-->
         <el-table-column prop="departmentName" label="部门名称" align="center"/>
-        <el-table-column fixed="right" label="操作" width="100" align="center">
+        <el-table-column fixed="right" label="操作" align="center">
           <template #default="scope">
             <el-button type="danger" size="small" @click="handleDelete(scope.row)">删除</el-button>
           </template>
