@@ -8,13 +8,14 @@ import EmpGroup from "@/views/EmpGroup";
 import EmpType from "@/views/EmpType";
 import SignCount from "@/views/SignCount";
 import DataShow from "@/views/DataShow";
+import CanteenShow from "@/views/CanteenShow";
 
 const routes = [
     {
         path: '/',
         name: 'Layout',
         component: Layout,
-        redirect:"/employee",
+        // redirect:"/employee",
         children: [
             {
                 path: '/employee',
@@ -50,6 +51,11 @@ const routes = [
                 path: '/dataShow',
                 name:'dataShow',
                 component: DataShow
+            },
+            {
+                path: '/canteenShow',
+                name:'canteenShow',
+                component: CanteenShow
             }
         ]
     },
@@ -57,6 +63,11 @@ const routes = [
         path: '/login',
         name: 'login',
         component: Login
+    },
+    {
+        path: '/',
+        name: '/',
+        redirect: '/login',
     },
 
 ]
