@@ -1,9 +1,9 @@
 <template>
-  <div>
+  <div class="aside">
     <el-menu
         :default-active="path"
         class="el-menu-vertical-demo"
-        style="min-height: calc(100vh - 50px)"
+        style="min-height: 92vh"
         router
     >
       <el-menu-item index="/empgroup">
@@ -40,7 +40,11 @@
       </el-sub-menu>
       <el-menu-item index="/dataShow">
         <el-icon><Histogram /></el-icon>
-        <span>数据统计</span>
+        <span>员工情况统计</span>
+      </el-menu-item>
+      <el-menu-item index="/canteenShow">
+        <el-icon><Histogram /></el-icon>
+        <span>食堂人数统计</span>
       </el-menu-item>
     </el-menu>
   </div>
@@ -66,6 +70,9 @@ export default {
 </script>
 
 <style scoped>
+.aside {
+  width: 100%;
+}
 :deep .el-sub-menu .el-menu-item {
   min-width: auto;
 }
